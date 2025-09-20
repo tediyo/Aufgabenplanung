@@ -10,7 +10,7 @@ const createTaskNotifications = async (task, user) => {
     // Start date notification
     if (task.notifications.startDate) {
       notifications.push({
-        type: 'task-start',
+        type: 'taskStart',
         task: task._id,
         user: user._id,
         email: user.email,
@@ -27,7 +27,7 @@ const createTaskNotifications = async (task, user) => {
       
       if (reminderDate > new Date()) {
         notifications.push({
-          type: 'task-reminder',
+          type: 'taskReminder',
           task: task._id,
           user: user._id,
           email: user.email,
@@ -41,7 +41,7 @@ const createTaskNotifications = async (task, user) => {
     // Due date notification
     if (task.notifications.endDate) {
       notifications.push({
-        type: 'task-due',
+        type: 'taskDue',
         task: task._id,
         user: user._id,
         email: user.email,
@@ -75,7 +75,7 @@ const processPendingNotifications = async () => {
         const result = await sendTaskNotification(
           notification.type,
           notification.task,
-          notification.user
+          { email: notification.email, _id: notification.user }
         );
 
         if (result.success) {
@@ -110,13 +110,13 @@ const checkOverdueTasks = async () => {
       // Check if overdue notification already exists
       const existingNotification = await Notification.findOne({
         task: task._id,
-        type: 'task-overdue',
+        type: 'taskOverdue',
         status: { $in: ['pending', 'sent'] }
       });
 
       if (!existingNotification) {
         const notification = new Notification({
-          type: 'task-overdue',
+          type: 'taskOverdue',
           task: task._id,
           user: task.user._id,
           email: task.user.email,
@@ -148,7 +148,7 @@ const updateTaskNotifications = async (taskId, updates) => {
       // Delete existing notifications
       await Notification.deleteMany({
         task: taskId,
-        type: { $in: ['task-start', 'task-reminder', 'task-due'] }
+        type: { $in: ['taskStart', 'taskReminder', 'taskDue'] }
       });
 
       // Create new notifications with updated dates
@@ -164,7 +164,7 @@ const updateTaskNotifications = async (taskId, updates) => {
 
       if (!existingCompletionNotification) {
         const notification = new Notification({
-          type: 'task-completed',
+          type: 'taskCompleted',
           task: taskId,
           user: task.user._id,
           email: task.user.email,

@@ -1,8 +1,8 @@
 const nodemailer = require('nodemailer');
 
 // Create transporter
-const createTransporter = () => {
-  return nodemailer.createTransporter({
+const createTransport = () => {
+  return nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: process.env.EMAIL_PORT || 587,
     secure: false, // true for 465, false for other ports
@@ -252,7 +252,7 @@ const emailTemplates = {
 // Send email function
 const sendEmail = async (to, subject, html) => {
   try {
-    const transporter = createTransporter();
+    const transporter = createTransport();
     
     const mailOptions = {
       from: `"Task Scheduler" <${process.env.EMAIL_USER}>`,
@@ -291,6 +291,3 @@ module.exports = {
   sendTaskNotification,
   emailTemplates
 };
-
-
-
