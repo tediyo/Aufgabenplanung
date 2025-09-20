@@ -1,0 +1,362 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  SortAsc, 
+  SortDesc,
+  Grid,
+  List,
+  Calendar,
+  Clock
+} from 'lucide-react';
+import { useTasks } from '../contexts/TaskContext';
+import TaskCard from '../components/TaskCard';
+import LoadingSpinner from '../components/LoadingSpinner';
+import TaskFilters from '../components/TaskFilters';
+
+const Tasks = () => {
+  const { 
+    tasks, 
+    loading, 
+    filters, 
+    pagination, 
+    setFilters, 
+    setSorting,
+    fetchTasks 
+  } = useTasks();
+  
+  const [viewMode, setViewMode] = useState('grid');
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  useEffect(() => {
+    fetchTasks();
+  }, [filters, sortBy, sortOrder]);
+
+  const handleSearch = (searchTerm) => {
+    setFilters({ search: searchTerm });
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  const handleSort = (field) => {
+    const newOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortBy(field);
+    setSortOrder(newOrder);
+    setSorting(field, newOrder);
+  };
+
+  const getSortIcon = (field) => {
+    if (sortBy !== field) return null;
+    return sortOrder === 'asc' ? (
+      <SortAsc className="h-4 w-4" />
+    ) : (
+      <SortDesc className="h-4 w-4" />
+    );
+  };
+
+  const getStatusCounts = () => {
+    return {
+      total: tasks.length,
+      todo: tasks.filter(t => t.status === 'todo').length,
+      inProgress: tasks.filter(t => t.status === 'in-progress').length,
+      done: tasks.filter(t => t.status === 'done').length,
+      cancelled: tasks.filter(t => t.status === 'cancelled').length,
+    };
+  };
+
+  const statusCounts = getStatusCounts();
+
+  if (loading) {
+    return <LoadingSpinner text="Loading tasks..." />;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="md:flex md:items-center md:justify-between">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+            Tasks
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage and track your tasks
+          </p>
+        </div>
+        <div className="mt-4 flex space-x-3 md:mt-0 md:ml-4">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="btn btn-secondary inline-flex items-center"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </button>
+          <Link
+            to="/tasks/create"
+            className="btn btn-primary inline-flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Task
+          </Link>
+        </div>
+      </div>
+
+      {/* Status Overview */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">{statusCounts.total}</span>
+                </div>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Total</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-sm font-medium">{statusCounts.todo}</span>
+                </div>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">To Do</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <span className="text-yellow-600 text-sm font-medium">{statusCounts.inProgress}</span>
+                </div>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">In Progress</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 text-sm font-medium">{statusCounts.done}</span>
+                </div>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Done</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                  <span className="text-gray-600 text-sm font-medium">{statusCounts.cancelled}</span>
+                </div>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Cancelled</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      {showFilters && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <TaskFilters
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onSearch={handleSearch}
+          />
+        </div>
+      )}
+
+      {/* Toolbar */}
+      <div className="bg-white shadow rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search tasks..."
+                className="input w-64"
+                value={filters.search}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Sort by:</span>
+              <button
+                onClick={() => handleSort('title')}
+                className="flex items-center space-x-1 px-3 py-1 text-sm border rounded-md hover:bg-gray-50"
+              >
+                <span>Title</span>
+                {getSortIcon('title')}
+              </button>
+              <button
+                onClick={() => handleSort('startDate')}
+                className="flex items-center space-x-1 px-3 py-1 text-sm border rounded-md hover:bg-gray-50"
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Date</span>
+                {getSortIcon('startDate')}
+              </button>
+              <button
+                onClick={() => handleSort('priority')}
+                className="flex items-center space-x-1 px-3 py-1 text-sm border rounded-md hover:bg-gray-50"
+              >
+                <span>Priority</span>
+                {getSortIcon('priority')}
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md ${
+                  viewMode === 'grid' 
+                    ? 'bg-primary-100 text-primary-600' 
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <Grid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md ${
+                  viewMode === 'list' 
+                    ? 'bg-primary-100 text-primary-600' 
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tasks Grid/List */}
+      {tasks.length > 0 ? (
+        <div className={
+          viewMode === 'grid' 
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+            : 'space-y-4'
+        }>
+          {tasks.map((task) => (
+            <TaskCard 
+              key={task._id} 
+              task={task} 
+              compact={viewMode === 'list'} 
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <div className="mx-auto h-12 w-12 text-gray-400">
+            <Calendar className="h-12 w-12" />
+          </div>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No tasks found</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Get started by creating a new task.
+          </p>
+          <div className="mt-6">
+            <Link
+              to="/tasks/create"
+              className="btn btn-primary inline-flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Task
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <button
+              disabled={!pagination.hasPrev}
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              disabled={!pagination.hasNext}
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Showing{' '}
+                <span className="font-medium">
+                  {(pagination.currentPage - 1) * 20 + 1}
+                </span>{' '}
+                to{' '}
+                <span className="font-medium">
+                  {Math.min(pagination.currentPage * 20, pagination.totalTasks)}
+                </span>{' '}
+                of{' '}
+                <span className="font-medium">{pagination.totalTasks}</span>{' '}
+                results
+              </p>
+            </div>
+            <div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  disabled={!pagination.hasPrev}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={!pagination.hasNext}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Tasks;
+
+
+
