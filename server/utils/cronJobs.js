@@ -1,5 +1,11 @@
 const cron = require('node-cron');
-const { processPendingNotifications, checkOverdueTasks, cleanupOldNotifications } = require('./notificationUtils');
+const { 
+  processPendingNotifications, 
+  checkOverdueTasks, 
+  cleanupOldNotifications,
+  sendWeeklyReports,
+  sendMonthlyReports
+} = require('./notificationUtils');
 
 // Process pending notifications every minute
 const processNotificationsJob = cron.schedule('* * * * *', async () => {
@@ -44,12 +50,40 @@ const cleanupJob = cron.schedule('0 2 * * *', async () => {
   scheduled: false
 });
 
+// Send weekly reports every Monday at 8 AM
+const weeklyReportJob = cron.schedule('0 8 * * 1', async () => {
+  try {
+    console.log('Sending weekly reports...');
+    const sentCount = await sendWeeklyReports();
+    console.log(`Weekly reports sent to ${sentCount} users`);
+  } catch (error) {
+    console.error('Error in weekly report job:', error);
+  }
+}, {
+  scheduled: false
+});
+
+// Send monthly reports on the 1st day of each month at 8 AM
+const monthlyReportJob = cron.schedule('0 8 1 * *', async () => {
+  try {
+    console.log('Sending monthly reports...');
+    const sentCount = await sendMonthlyReports();
+    console.log(`Monthly reports sent to ${sentCount} users`);
+  } catch (error) {
+    console.error('Error in monthly report job:', error);
+  }
+}, {
+  scheduled: false
+});
+
 // Start all cron jobs
 const start = () => {
   console.log('Starting cron jobs...');
   processNotificationsJob.start();
   checkOverdueJob.start();
   cleanupJob.start();
+  weeklyReportJob.start();
+  monthlyReportJob.start();
   console.log('All cron jobs started');
 };
 
@@ -59,6 +93,8 @@ const stop = () => {
   processNotificationsJob.stop();
   checkOverdueJob.stop();
   cleanupJob.stop();
+  weeklyReportJob.stop();
+  monthlyReportJob.stop();
   console.log('All cron jobs stopped');
 };
 
@@ -67,7 +103,9 @@ module.exports = {
   stop,
   processNotificationsJob,
   checkOverdueJob,
-  cleanupJob
+  cleanupJob,
+  weeklyReportJob,
+  monthlyReportJob
 };
 
 

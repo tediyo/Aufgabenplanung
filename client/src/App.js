@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import NotificationModal from './components/NotificationModal';
 
 // Sidebar Component
-const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout }) => {
+const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask }) => {
   const [filter, setFilter] = useState('all');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredTasks = tasks.filter(task => {
@@ -101,50 +103,156 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout }) => {
         <div style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
           {filteredTasks.map(task => (
             <div
-              key={task.id}
-              onClick={() => onTaskSelect(task)}
+              key={task._id}
               style={{
                 padding: '12px',
                 marginBottom: '8px',
                 borderRadius: '8px',
-                background: selectedTask?.id === task.id ? '#3b82f6' : '#374151',
-                cursor: 'pointer',
+                background: selectedTask?._id === task._id ? '#3b82f6' : '#374151',
                 border: '1px solid #4b5563',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                position: 'relative'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <span style={{ fontSize: '16px' }}>{getStatusIcon(task.status)}</span>
-                <span style={{ 
-                  fontSize: '14px', 
-                  fontWeight: '600',
-                  color: selectedTask?.id === task.id ? 'white' : '#f9fafb'
-                }}>
-                  {task.title}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: getPriorityColor(task.priority)
-                }}></span>
-                <span style={{ 
+              {/* Main task content - clickable */}
+              <div 
+                onClick={() => onTaskSelect(task)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '16px' }}>{getStatusIcon(task.status)}</span>
+                  <span style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '600',
+                    color: selectedTask?._id === task._id ? 'white' : '#f9fafb'
+                  }}>
+                    {task.title}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: getPriorityColor(task.priority)
+                  }}></span>
+                  <span style={{ 
+                    fontSize: '12px', 
+                    color: selectedTask?._id === task._id ? '#e5e7eb' : '#9ca3af',
+                    textTransform: 'capitalize'
+                  }}>
+                    {task.priority} • {task.category}
+                  </span>
+                </div>
+                <div style={{ 
                   fontSize: '12px', 
-                  color: selectedTask?.id === task.id ? '#e5e7eb' : '#9ca3af',
-                  textTransform: 'capitalize'
+                  color: selectedTask?._id === task._id ? '#e5e7eb' : '#9ca3af',
+                  marginTop: '4px'
                 }}>
-                  {task.priority} • {task.category}
-                </span>
+                  {task.progress}% complete
+                </div>
               </div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: selectedTask?.id === task.id ? '#e5e7eb' : '#9ca3af',
-                marginTop: '4px'
-              }}>
-                {task.progress}% complete
-              </div>
+
+              {/* Delete button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteConfirm(task._id);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  border: '1px solid #ef4444',
+                  borderRadius: '4px',
+                  color: '#ef4444',
+                  padding: '4px 6px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(239, 68, 68, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(239, 68, 68, 0.2)';
+                }}
+              >
+                🗑️
+              </button>
+
+              {/* Delete confirmation */}
+              {showDeleteConfirm === task._id && (
+                <div style={{
+                  position: 'absolute',
+                  top: '0',
+                  left: '0',
+                  right: '0',
+                  bottom: '0',
+                  background: 'rgba(0, 0, 0, 0.8)',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  zIndex: 10
+                }}>
+                  <div style={{
+                    background: '#374151',
+                    padding: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #4b5563',
+                    textAlign: 'center',
+                    maxWidth: '200px'
+                  }}>
+                    <p style={{ 
+                      color: '#f9fafb', 
+                      fontSize: '12px', 
+                      margin: '0 0 8px 0' 
+                    }}>
+                      Delete "{task.title}"?
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteTask(task._id);
+                          setShowDeleteConfirm(null);
+                        }}
+                        style={{
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteConfirm(null);
+                        }}
+                        style={{
+                          background: '#6b7280',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -181,7 +289,9 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
     priority: 'medium',
     timeFrame: 'custom',
     estimatedHours: 1,
-    tags: ''
+    tags: '',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   });
 
   const handleSubmit = (e) => {
@@ -193,8 +303,6 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
         status: 'todo',
         progress: 0,
         actualHours: 0,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
       };
       onAddTask(task);
@@ -205,7 +313,9 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
         priority: 'medium',
         timeFrame: 'custom',
         estimatedHours: 1,
-        tags: ''
+        tags: '',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
       onClose();
     }
@@ -388,6 +498,46 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
             </div>
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', color: '#374151', fontWeight: '500' }}>
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', color: '#374151', fontWeight: '500' }}>
+                End Date
+              </label>
+              <input
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}
+                required
+              />
+            </div>
+          </div>
+
           <div style={{ marginBottom: '30px' }}>
             <label style={{ display: 'block', marginBottom: '8px', color: '#374151', fontWeight: '500' }}>
               Tags (comma-separated)
@@ -446,81 +596,211 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
 
 // Main Dashboard Component
 const Dashboard = () => {
-  const [tasks, setTasks] = useState([
-    { 
-      id: 1, 
-      title: 'Complete Project Proposal', 
-      description: 'Write and submit the quarterly project proposal',
-      status: 'in-progress', 
-      priority: 'high',
-      category: 'work',
-      timeFrame: 'weekly',
-      progress: 65,
-      estimatedHours: 8,
-      actualHours: 5.2,
-      startDate: '2024-01-15',
-      endDate: '2024-01-22',
-      tags: ['project', 'deadline']
-    },
-    { 
-      id: 2, 
-      title: 'Daily Workout', 
-      description: 'Complete 45-minute workout routine',
-      status: 'todo', 
-      priority: 'medium',
-      category: 'health',
-      timeFrame: 'daily',
-      progress: 0,
-      estimatedHours: 1,
-      actualHours: 0,
-      startDate: '2024-01-20',
-      endDate: '2024-01-20',
-      tags: ['fitness', 'routine']
-    },
-    { 
-      id: 3, 
-      title: 'Monthly Budget Review', 
-      description: 'Review expenses and plan next month budget',
-      status: 'done', 
-      priority: 'high',
-      category: 'finance',
-      timeFrame: 'monthly',
-      progress: 100,
-      estimatedHours: 2,
-      actualHours: 1.8,
-      startDate: '2024-01-01',
-      endDate: '2024-01-31',
-      tags: ['budget', 'planning']
-    }
-  ]);
-
+  const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  
+  // Notification state
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
+
+  // Helper function to show notifications
+  const showNotification = (type, title, message) => {
+    setNotification({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showNotification('error', 'Authentication Error', 'No authentication token found. Please log in again.');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
+
+      // Update local state after successful deletion
+      setTasks(prevTasks => {
+        const updatedTasks = prevTasks.filter(task => task._id !== taskId);
+        // If the deleted task was selected, clear selection
+        if (selectedTask?._id === taskId) {
+          setSelectedTask(null);
+        }
+        return updatedTasks;
+      });
+
+      showNotification('success', 'Task Deleted', 'Task has been successfully deleted from the database.');
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      showNotification('error', 'Delete Failed', 'Failed to delete task. Please try again.');
+    }
+  };
   const [activeTimer, setActiveTimer] = useState(null);
 
-  const addTask = (newTask) => {
-    setTasks([...tasks, newTask]);
+  // Load tasks from backend
+  const loadTasks = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/tasks', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTasks(data.tasks || []);
+      }
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    }
   };
 
-  const updateTaskStatus = (id, newStatus) => {
-    setTasks(tasks.map(task => 
-      task.id === id 
-        ? { ...task, status: newStatus, progress: newStatus === 'done' ? 100 : task.progress }
-        : task
-    ));
+  // Load tasks on component mount
+  React.useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const addTask = async (newTask) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...newTask,
+          notifications: {
+            startDate: true,
+            endDate: true,
+            reminder: true,
+            reminderDays: 1
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTasks([...tasks, data.task]);
+        showNotification('success', 'Task Created', 'Task created successfully! You will receive email notifications on the start and end dates.');
+        // Reload tasks to get the latest data
+        await loadTasks();
+      } else {
+        const errorData = await response.json();
+        showNotification('error', 'Creation Failed', `Error creating task: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+      showNotification('error', 'Creation Failed', 'Error creating task. Please try again.');
+    }
   };
 
-  const startTimer = (id) => {
-    setActiveTimer(id);
+  const updateTaskStatus = async (id, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          progress: newStatus === 'done' ? 100 : 0
+        })
+      });
+
+      if (response.ok) {
+        setTasks(tasks.map(task => 
+          task._id === id 
+            ? { ...task, status: newStatus, progress: newStatus === 'done' ? 100 : task.progress }
+            : task
+        ));
+        // Reload tasks to get the latest data
+        await loadTasks();
+      } else {
+        showNotification('error', 'Update Failed', 'Error updating task status');
+      }
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      showNotification('error', 'Update Failed', 'Error updating task status');
+    }
   };
 
-  const stopTimer = (id) => {
-    setActiveTimer(null);
-    setTasks(tasks.map(task => 
-      task.id === id 
-        ? { ...task, actualHours: task.actualHours + 0.5 }
-        : task
-    ));
+  const startTimer = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/tasks/${id}/start-timer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setActiveTimer(id);
+        // Reload tasks to get the latest data
+        await loadTasks();
+      } else {
+        showNotification('error', 'Timer Error', 'Error starting timer');
+      }
+    } catch (error) {
+      console.error('Error starting timer:', error);
+      showNotification('error', 'Timer Error', 'Error starting timer');
+    }
+  };
+
+  const stopTimer = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/tasks/${id}/stop-timer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setActiveTimer(null);
+        setTasks(tasks.map(task => 
+          task._id === id 
+            ? { ...task, actualHours: task.actualHours + 0.5 }
+            : task
+        ));
+        // Reload tasks to get the latest data
+        await loadTasks();
+      } else {
+        showNotification('error', 'Timer Error', 'Error stopping timer');
+      }
+    } catch (error) {
+      console.error('Error stopping timer:', error);
+      showNotification('error', 'Timer Error', 'Error stopping timer');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -562,6 +842,7 @@ const Dashboard = () => {
         tasks={tasks} 
         onTaskSelect={setSelectedTask}
         selectedTask={selectedTask}
+        onDeleteTask={handleDeleteTask}
         onLogout={async () => {
           try {
             // Clear local storage
@@ -748,7 +1029,7 @@ const Dashboard = () => {
               <div style={{ display: 'flex', gap: '10px' }}>
                 {selectedTask.status === 'in-progress' && (
                   <button
-                    onClick={() => activeTimer === selectedTask.id ? stopTimer(selectedTask.id) : startTimer(selectedTask.id)}
+                    onClick={async () => activeTimer === selectedTask.id ? await stopTimer(selectedTask.id) : await startTimer(selectedTask.id)}
                     style={{
                       padding: '10px 20px',
                       background: activeTimer === selectedTask.id ? '#ef4444' : '#10b981',
@@ -763,11 +1044,11 @@ const Dashboard = () => {
                   </button>
                 )}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const statusOrder = ['todo', 'in-progress', 'done'];
                     const currentIndex = statusOrder.indexOf(selectedTask.status);
                     const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
-                    updateTaskStatus(selectedTask.id, nextStatus);
+                    await updateTaskStatus(selectedTask.id, nextStatus);
                     setSelectedTask({...selectedTask, status: nextStatus});
                   }}
                   style={{
@@ -815,10 +1096,20 @@ const Dashboard = () => {
         )}
 
         {/* Task Modal */}
-        <TaskModal 
+        <TaskModal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           onAddTask={addTask}
+        />
+        
+        {/* Notification Modal */}
+        <NotificationModal
+          isOpen={notification.isOpen}
+          onClose={closeNotification}
+          type={notification.type}
+          title={notification.title}
+          message={notification.message}
+          duration={5000}
         />
       </div>
     </div>

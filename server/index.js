@@ -32,12 +32,23 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-scheduler', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+// MongoDB connection options for Atlas
+const mongoOptions = {
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+  serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+};
+
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-scheduler', mongoOptions)
+.then(() => {
+  console.log('✅ MongoDB connected successfully');
+  console.log('📍 Database:', mongoose.connection.db.databaseName);
+  console.log('🌐 Host:', mongoose.connection.host);
 })
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.error('MongoDB connection error:', err));
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err);
+  process.exit(1); // Exit the process if database connection fails
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

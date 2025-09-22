@@ -24,6 +24,11 @@ const taskReducer = (state, action) => {
         ...state,
         tasks: state.tasks.filter(task => task._id !== action.payload),
       };
+    case 'BULK_DELETE_TASKS':
+      return {
+        ...state,
+        tasks: state.tasks.filter(task => !action.payload.includes(task._id)),
+      };
     case 'SET_FILTERS':
       return { ...state, filters: { ...state.filters, ...action.payload } };
     case 'SET_PAGINATION':
@@ -111,12 +116,63 @@ export const TaskProvider = ({ children }) => {
 
   const deleteTask = async (id) => {
     try {
-      await tasksAPI.deleteTask(id);
+      const response = await tasksAPI.deleteTask(id);
       dispatch({ type: 'DELETE_TASK', payload: id });
       toast.success('Task deleted successfully!');
-      return { success: true };
+      return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to delete task';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
+
+  const bulkDeleteTasks = async (taskIds) => {
+    try {
+      const response = await tasksAPI.bulkDeleteTasks(taskIds);
+      dispatch({ type: 'BULK_DELETE_TASKS', payload: taskIds });
+      toast.success(`${response.data.deletedTasks.count} tasks deleted successfully!`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to delete tasks';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
+
+  const cleanupCompletedTasks = async () => {
+    try {
+      const response = await tasksAPI.cleanupCompletedTasks();
+      const deletedCount = response.data.deletedTasks.count;
+      if (deletedCount > 0) {
+        // Remove completed tasks from state
+        dispatch({ type: 'SET_TASKS', payload: state.tasks.filter(task => task.status !== 'done') });
+        toast.success(`${deletedCount} completed tasks cleaned up!`);
+      } else {
+        toast.info('No completed tasks found to clean up');
+      }
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to cleanup completed tasks';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
+
+  const cleanupOldTasks = async (days = 30) => {
+    try {
+      const response = await tasksAPI.cleanupOldTasks(days);
+      const deletedCount = response.data.deletedTasks.count;
+      if (deletedCount > 0) {
+        // Refresh tasks to get updated list
+        await fetchTasks();
+        toast.success(`${deletedCount} old tasks cleaned up!`);
+      } else {
+        toast.info(`No old tasks found (older than ${days} days)`);
+      }
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to cleanup old tasks';
       toast.error(message);
       return { success: false, error: message };
     }
@@ -177,6 +233,9 @@ export const TaskProvider = ({ children }) => {
     createTask,
     updateTask,
     deleteTask,
+    bulkDeleteTasks,
+    cleanupCompletedTasks,
+    cleanupOldTasks,
     startTimer,
     stopTimer,
     setFilters,

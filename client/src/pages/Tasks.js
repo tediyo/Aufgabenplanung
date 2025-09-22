@@ -9,12 +9,15 @@ import {
   Grid,
   List,
   Calendar,
-  Clock
+  Clock,
+  Trash2,
+  CheckSquare
 } from 'lucide-react';
 import { useTasks } from '../contexts/TaskContext';
 import TaskCard from '../components/TaskCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TaskFilters from '../components/TaskFilters';
+import DeleteManager from '../components/DeleteManager';
 
 const Tasks = () => {
   const { 
@@ -24,13 +27,19 @@ const Tasks = () => {
     pagination, 
     setFilters, 
     setSorting,
-    fetchTasks 
+    fetchTasks,
+    bulkDeleteTasks,
+    cleanupCompletedTasks,
+    cleanupOldTasks
   } = useTasks();
   
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [showDeleteManager, setShowDeleteManager] = useState(false);
+  const [selectedTasks, setSelectedTasks] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -72,6 +81,37 @@ const Tasks = () => {
 
   const statusCounts = getStatusCounts();
 
+  const handleTaskSelect = (taskId) => {
+    setSelectedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedTasks.length === tasks.length) {
+      setSelectedTasks([]);
+    } else {
+      setSelectedTasks(tasks.map(task => task._id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedTasks.length === 0) return;
+    try {
+      await bulkDeleteTasks(selectedTasks);
+      setSelectedTasks([]);
+      setShowBulkActions(false);
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+    }
+  };
+
+  const handleTaskDelete = (taskId) => {
+    setSelectedTasks(prev => prev.filter(id => id !== taskId));
+  };
+
   if (loading) {
     return <LoadingSpinner text="Loading tasks..." />;
   }
@@ -95,6 +135,13 @@ const Tasks = () => {
           >
             <Filter className="h-4 w-4 mr-2" />
             Filters
+          </button>
+          <button
+            onClick={() => setShowDeleteManager(true)}
+            className="btn btn-outline inline-flex items-center text-red-600 border-red-300 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Tasks
           </button>
           <Link
             to="/tasks/create"
@@ -264,6 +311,39 @@ const Tasks = () => {
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectedTasks.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium text-blue-800">
+                {selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''} selected
+              </span>
+              <button
+                onClick={handleSelectAll}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                {selectedTasks.length === tasks.length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleBulkDelete}
+                className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+              >
+                Delete Selected
+              </button>
+              <button
+                onClick={() => setSelectedTasks([])}
+                className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tasks Grid/List */}
       {tasks.length > 0 ? (
         <div className={
@@ -272,11 +352,24 @@ const Tasks = () => {
             : 'space-y-4'
         }>
           {tasks.map((task) => (
-            <TaskCard 
-              key={task._id} 
-              task={task} 
-              compact={viewMode === 'list'} 
-            />
+            <div key={task._id} className="relative">
+              {selectedTasks.length > 0 && (
+                <div className="absolute top-2 left-2 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedTasks.includes(task._id)}
+                    onChange={() => handleTaskSelect(task._id)}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                </div>
+              )}
+              <TaskCard 
+                task={task} 
+                compact={viewMode === 'list'} 
+                onDelete={handleTaskDelete}
+                showDeleteButton={true}
+              />
+            </div>
           ))}
         </div>
       ) : (
@@ -351,6 +444,11 @@ const Tasks = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Delete Manager Modal */}
+      {showDeleteManager && (
+        <DeleteManager onClose={() => setShowDeleteManager(false)} />
       )}
     </div>
   );
