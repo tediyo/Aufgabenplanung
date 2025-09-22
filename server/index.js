@@ -22,8 +22,6 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
       'https://aufgabenplanung.vercel.app',
       'https://aufgabenplanung-git-master-tewodros-birhanus-projects.vercel.app',
       process.env.CORS_ORIGIN,
@@ -66,7 +64,7 @@ const mongoOptions = {
   socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
 };
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-scheduler', mongoOptions)
+mongoose.connect(process.env.MONGODB_URI, mongoOptions)
 .then(() => {
   console.log('✅ MongoDB connected successfully');
   console.log('📍 Database:', mongoose.connection.db.databaseName);
