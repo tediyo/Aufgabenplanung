@@ -3,7 +3,11 @@ const { body, validationResult, query } = require('express-validator');
 const Task = require('../models/Task');
 const Notification = require('../models/Notification');
 const { auth } = require('../middleware/auth');
-const { createTaskNotifications } = require('../utils/notificationUtils');
+const { 
+  createTaskNotifications, 
+  sendImmediateTaskCreationNotification, 
+  updateTaskNotifications 
+} = require('../utils/notificationUtils');
 
 const router = express.Router();
 
@@ -188,7 +192,10 @@ router.post('/', auth, [
 
     await task.save();
 
-    // Create notifications for the task
+    // Send immediate task creation notification
+    await sendImmediateTaskCreationNotification(task, req.user);
+
+    // Create scheduled notifications for the task
     await createTaskNotifications(task, req.user);
 
     // If this is a subtask, add it to parent task
@@ -257,6 +264,9 @@ router.put('/:id', auth, [
 
     await task.save();
 
+    // Update notifications based on changes
+    await updateTaskNotifications(req.params.id, req.body);
+
     res.json({
       message: 'Task updated successfully',
       task
@@ -277,25 +287,215 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
 
+    const taskTitle = task.title;
+    const isRecurring = task.isRecurring;
+
     // Delete associated notifications
-    await Notification.deleteMany({ task: task._id });
+    const deletedNotifications = await Notification.deleteMany({ task: task._id });
+    console.log(`Deleted ${deletedNotifications.deletedCount} notifications for task: ${taskTitle}`);
 
     // Remove from parent task if it's a subtask
     if (task.parentTask) {
       await Task.findByIdAndUpdate(task.parentTask, {
         $pull: { subtasks: task._id }
       });
+      console.log(`Removed subtask ${taskTitle} from parent task`);
     }
 
-    // Delete subtasks
-    await Task.deleteMany({ parentTask: task._id });
+    // Delete subtasks (cascade delete)
+    const deletedSubtasks = await Task.deleteMany({ parentTask: task._id });
+    if (deletedSubtasks.deletedCount > 0) {
+      console.log(`Deleted ${deletedSubtasks.deletedCount} subtasks for task: ${taskTitle}`);
+    }
 
+    // Delete the main task
     await Task.findByIdAndDelete(req.params.id);
 
-    res.json({ message: 'Task deleted successfully' });
+    res.json({ 
+      message: 'Task deleted successfully',
+      deletedTask: {
+        title: taskTitle,
+        isRecurring: isRecurring,
+        subtasksDeleted: deletedSubtasks.deletedCount,
+        notificationsDeleted: deletedNotifications.deletedCount
+      }
+    });
   } catch (error) {
     console.error('Delete task error:', error);
     res.status(500).json({ message: 'Server error while deleting task' });
+  }
+});
+
+// @route   DELETE /api/tasks/bulk
+// @desc    Delete multiple tasks
+// @access  Private
+router.delete('/bulk', auth, [
+  body('taskIds').isArray({ min: 1 }).withMessage('Task IDs array is required'),
+  body('taskIds.*').isMongoId().withMessage('Invalid task ID format')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { taskIds } = req.body;
+
+    // Find all tasks belonging to the user
+    const tasks = await Task.find({ 
+      _id: { $in: taskIds }, 
+      user: req.user._id 
+    });
+
+    if (tasks.length === 0) {
+      return res.status(404).json({ message: 'No tasks found' });
+    }
+
+    const taskTitles = tasks.map(task => task.title);
+    let totalSubtasksDeleted = 0;
+    let totalNotificationsDeleted = 0;
+
+    // Delete each task and its associated data
+    for (const task of tasks) {
+      // Delete associated notifications
+      const deletedNotifications = await Notification.deleteMany({ task: task._id });
+      totalNotificationsDeleted += deletedNotifications.deletedCount;
+
+      // Remove from parent task if it's a subtask
+      if (task.parentTask) {
+        await Task.findByIdAndUpdate(task.parentTask, {
+          $pull: { subtasks: task._id }
+        });
+      }
+
+      // Delete subtasks
+      const deletedSubtasks = await Task.deleteMany({ parentTask: task._id });
+      totalSubtasksDeleted += deletedSubtasks.deletedCount;
+    }
+
+    // Delete all tasks
+    const deletedTasks = await Task.deleteMany({ 
+      _id: { $in: taskIds }, 
+      user: req.user._id 
+    });
+
+    res.json({
+      message: 'Tasks deleted successfully',
+      deletedTasks: {
+        count: deletedTasks.deletedCount,
+        titles: taskTitles,
+        subtasksDeleted: totalSubtasksDeleted,
+        notificationsDeleted: totalNotificationsDeleted
+      }
+    });
+  } catch (error) {
+    console.error('Bulk delete tasks error:', error);
+    res.status(500).json({ message: 'Server error while deleting tasks' });
+  }
+});
+
+// @route   DELETE /api/tasks/cleanup/completed
+// @desc    Delete all completed tasks
+// @access  Private
+router.delete('/cleanup/completed', auth, async (req, res) => {
+  try {
+    // Find all completed tasks for the user
+    const completedTasks = await Task.find({ 
+      user: req.user._id, 
+      status: 'done' 
+    });
+
+    if (completedTasks.length === 0) {
+      return res.json({ 
+        message: 'No completed tasks found to delete',
+        deletedCount: 0
+      });
+    }
+
+    const taskIds = completedTasks.map(task => task._id);
+    let totalNotificationsDeleted = 0;
+
+    // Delete associated notifications
+    for (const taskId of taskIds) {
+      const deletedNotifications = await Notification.deleteMany({ task: taskId });
+      totalNotificationsDeleted += deletedNotifications.deletedCount;
+    }
+
+    // Delete all completed tasks
+    const deletedTasks = await Task.deleteMany({ 
+      _id: { $in: taskIds }, 
+      user: req.user._id 
+    });
+
+    res.json({
+      message: 'Completed tasks deleted successfully',
+      deletedTasks: {
+        count: deletedTasks.deletedCount,
+        notificationsDeleted: totalNotificationsDeleted
+      }
+    });
+  } catch (error) {
+    console.error('Cleanup completed tasks error:', error);
+    res.status(500).json({ message: 'Server error while cleaning up completed tasks' });
+  }
+});
+
+// @route   DELETE /api/tasks/cleanup/old
+// @desc    Delete old tasks (older than specified days)
+// @access  Private
+router.delete('/cleanup/old', auth, [
+  query('days').isInt({ min: 1, max: 365 }).withMessage('Days must be between 1 and 365')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const days = parseInt(req.query.days) || 30;
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    // Find old tasks for the user
+    const oldTasks = await Task.find({ 
+      user: req.user._id,
+      createdAt: { $lt: cutoffDate },
+      status: { $in: ['todo', 'in-progress'] } // Only delete non-completed old tasks
+    });
+
+    if (oldTasks.length === 0) {
+      return res.json({ 
+        message: `No old tasks found (older than ${days} days)`,
+        deletedCount: 0
+      });
+    }
+
+    const taskIds = oldTasks.map(task => task._id);
+    let totalNotificationsDeleted = 0;
+
+    // Delete associated notifications
+    for (const taskId of taskIds) {
+      const deletedNotifications = await Notification.deleteMany({ task: taskId });
+      totalNotificationsDeleted += deletedNotifications.deletedCount;
+    }
+
+    // Delete old tasks
+    const deletedTasks = await Task.deleteMany({ 
+      _id: { $in: taskIds }, 
+      user: req.user._id 
+    });
+
+    res.json({
+      message: `Old tasks deleted successfully (older than ${days} days)`,
+      deletedTasks: {
+        count: deletedTasks.deletedCount,
+        notificationsDeleted: totalNotificationsDeleted,
+        cutoffDate: cutoffDate.toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Cleanup old tasks error:', error);
+    res.status(500).json({ message: 'Server error while cleaning up old tasks' });
   }
 });
 

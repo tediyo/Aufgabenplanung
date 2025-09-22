@@ -1,47 +1,69 @@
 const Notification = require('../models/Notification');
 const Task = require('../models/Task');
-const { sendTaskNotification } = require('./emailService');
+const User = require('../models/User');
+const { 
+  sendTaskNotification, 
+  sendTaskCreationNotification, 
+  sendTaskActionNotification, 
+  sendScheduledDateNotification,
+  sendWeeklyReport,
+  sendMonthlyReport 
+} = require('./emailService');
 
-// Create notifications for a task
+// Send immediate task creation notification
+const sendImmediateTaskCreationNotification = async (task, user) => {
+  try {
+    const result = await sendTaskCreationNotification(task, user);
+    if (result.success) {
+      console.log(`Task creation notification sent for: ${task.title}`);
+    } else {
+      console.error(`Failed to send task creation notification: ${result.error}`);
+    }
+    return result;
+  } catch (error) {
+    console.error('Error sending task creation notification:', error);
+    throw error;
+  }
+};
+
+// Send task action notification (start/finish)
+const sendImmediateTaskActionNotification = async (action, task, user) => {
+  try {
+    const result = await sendTaskActionNotification(action, task, user);
+    if (result.success) {
+      console.log(`Task ${action} notification sent for: ${task.title}`);
+    } else {
+      console.error(`Failed to send task ${action} notification: ${result.error}`);
+    }
+    return result;
+  } catch (error) {
+    console.error(`Error sending task ${action} notification:`, error);
+    throw error;
+  }
+};
+
+// Create scheduled notifications for a task
 const createTaskNotifications = async (task, user) => {
   try {
     const notifications = [];
 
-    // Start date notification
-    if (task.notifications.startDate) {
+    // Start date notification (if task not started by start date)
+    if (task.notifications && task.notifications.startDate) {
       notifications.push({
-        type: 'taskStart',
+        type: 'task-start-date',
         task: task._id,
         user: user._id,
         email: user.email,
-        subject: `Task Started: ${task.title}`,
-        message: `Your task "${task.title}" has started.`,
+        subject: `Task Start Date: ${task.title}`,
+        message: `Your task "${task.title}" is scheduled to start today.`,
         scheduledFor: task.startDate
       });
     }
 
-    // Reminder notification (before end date)
-    if (task.notifications.reminder && task.notifications.reminderDays > 0) {
-      const reminderDate = new Date(task.endDate);
-      reminderDate.setDate(reminderDate.getDate() - task.notifications.reminderDays);
-      
-      if (reminderDate > new Date()) {
-        notifications.push({
-          type: 'taskReminder',
-          task: task._id,
-          user: user._id,
-          email: user.email,
-          subject: `Reminder: ${task.title} is due soon`,
-          message: `Your task "${task.title}" is due in ${task.notifications.reminderDays} day(s).`,
-          scheduledFor: reminderDate
-        });
-      }
-    }
-
-    // Due date notification
-    if (task.notifications.endDate) {
+    // Due date notification (if task not completed by end date)
+    if (task.notifications && task.notifications.endDate) {
       notifications.push({
-        type: 'taskDue',
+        type: 'task-due-date',
         task: task._id,
         user: user._id,
         email: user.email,
@@ -54,7 +76,7 @@ const createTaskNotifications = async (task, user) => {
     // Create notifications in database
     if (notifications.length > 0) {
       await Notification.insertMany(notifications);
-      console.log(`Created ${notifications.length} notifications for task: ${task.title}`);
+      console.log(`Created ${notifications.length} scheduled notifications for task: ${task.title}`);
     }
 
     return notifications;
@@ -71,12 +93,22 @@ const processPendingNotifications = async () => {
     
     for (const notification of pendingNotifications) {
       try {
-        // Send email
-        const result = await sendTaskNotification(
-          notification.type,
-          notification.task,
-          { email: notification.email, _id: notification.user }
-        );
+        let result;
+        
+        // Handle different notification types
+        if (['task-start-date', 'task-due-date'].includes(notification.type)) {
+          result = await sendScheduledDateNotification(
+            notification.type,
+            notification.task,
+            { email: notification.email, _id: notification.user }
+          );
+        } else {
+          result = await sendTaskNotification(
+            notification.type,
+            notification.task,
+            { email: notification.email, _id: notification.user }
+          );
+        }
 
         if (result.success) {
           await notification.markAsSent();
@@ -110,13 +142,13 @@ const checkOverdueTasks = async () => {
       // Check if overdue notification already exists
       const existingNotification = await Notification.findOne({
         task: task._id,
-        type: 'taskOverdue',
+        type: 'task-overdue',
         status: { $in: ['pending', 'sent'] }
       });
 
       if (!existingNotification) {
         const notification = new Notification({
-          type: 'taskOverdue',
+          type: 'task-overdue',
           task: task._id,
           user: task.user._id,
           email: task.user.email,
@@ -145,36 +177,24 @@ const updateTaskNotifications = async (taskId, updates) => {
 
     // If dates changed, update or recreate notifications
     if (updates.startDate || updates.endDate) {
-      // Delete existing notifications
+      // Delete existing scheduled notifications
       await Notification.deleteMany({
         task: taskId,
-        type: { $in: ['taskStart', 'taskReminder', 'taskDue'] }
+        type: { $in: ['task-start-date', 'task-due-date'] }
       });
 
       // Create new notifications with updated dates
       await createTaskNotifications(task, task.user);
     }
 
-    // If task is completed, create completion notification
+    // If task status changed to in-progress, send starting notification
+    if (updates.status === 'in-progress') {
+      await sendImmediateTaskActionNotification('start', task, task.user);
+    }
+
+    // If task status changed to done, send finishing notification
     if (updates.status === 'done') {
-      const existingCompletionNotification = await Notification.findOne({
-        task: taskId,
-        type: 'task-completed'
-      });
-
-      if (!existingCompletionNotification) {
-        const notification = new Notification({
-          type: 'taskCompleted',
-          task: taskId,
-          user: task.user._id,
-          email: task.user.email,
-          subject: `Task Completed: ${task.title}`,
-          message: `Congratulations! You've completed "${task.title}".`,
-          scheduledFor: new Date()
-        });
-
-        await notification.save();
-      }
+      await sendImmediateTaskActionNotification('finish', task, task.user);
     }
   } catch (error) {
     console.error('Error updating task notifications:', error);
@@ -201,12 +221,209 @@ const cleanupOldNotifications = async (daysOld = 30) => {
   }
 };
 
+// Generate weekly report data
+const generateWeeklyReportData = async (userId) => {
+  try {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const tasks = await Task.find({
+      user: userId,
+      $or: [
+        { createdAt: { $gte: startOfWeek, $lte: endOfWeek } },
+        { updatedAt: { $gte: startOfWeek, $lte: endOfWeek } }
+      ]
+    });
+
+    const doneTasks = tasks.filter(task => task.status === 'done');
+    const remainingTasks = tasks.filter(task => task.status === 'in-progress');
+    const todoTasks = tasks.filter(task => task.status === 'todo');
+
+    const weekRange = `${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()}`;
+
+    return {
+      weekRange,
+      doneTasks: doneTasks.length,
+      remainingTasks: remainingTasks.length,
+      todoTasks: todoTasks.length,
+      doneTasksList: doneTasks.map(task => ({ title: task.title, category: task.category })),
+      remainingTasksList: remainingTasks.map(task => ({ title: task.title, category: task.category, progress: task.progress || 0 })),
+      todoTasksList: todoTasks.map(task => ({ title: task.title, category: task.category, endDate: task.endDate }))
+    };
+  } catch (error) {
+    console.error('Error generating weekly report data:', error);
+    throw error;
+  }
+};
+
+// Generate monthly report data
+const generateMonthlyReportData = async (userId) => {
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const tasks = await Task.find({
+      user: userId,
+      $or: [
+        { createdAt: { $gte: startOfMonth, $lte: endOfMonth } },
+        { updatedAt: { $gte: startOfMonth, $lte: endOfMonth } }
+      ]
+    });
+
+    const doneTasks = tasks.filter(task => task.status === 'done');
+    const remainingTasks = tasks.filter(task => task.status === 'in-progress');
+    const todoTasks = tasks.filter(task => task.status === 'todo');
+
+    const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    return {
+      monthYear,
+      doneTasks: doneTasks.length,
+      remainingTasks: remainingTasks.length,
+      todoTasks: todoTasks.length,
+      doneTasksList: doneTasks.map(task => ({ title: task.title, category: task.category })),
+      remainingTasksList: remainingTasks.map(task => ({ title: task.title, category: task.category, progress: task.progress || 0 })),
+      todoTasksList: todoTasks.map(task => ({ title: task.title, category: task.category, endDate: task.endDate }))
+    };
+  } catch (error) {
+    console.error('Error generating monthly report data:', error);
+    throw error;
+  }
+};
+
+// Send weekly reports to all users
+const sendWeeklyReports = async () => {
+  try {
+    const users = await User.find({});
+    let sentCount = 0;
+
+    for (const user of users) {
+      try {
+        const reportData = await generateWeeklyReportData(user._id);
+        const result = await sendWeeklyReport(user, reportData);
+        
+        if (result.success) {
+          sentCount++;
+          console.log(`Weekly report sent to ${user.email}`);
+        } else {
+          console.error(`Failed to send weekly report to ${user.email}: ${result.error}`);
+        }
+      } catch (error) {
+        console.error(`Error sending weekly report to ${user.email}:`, error);
+      }
+    }
+
+    console.log(`Weekly reports sent to ${sentCount} users`);
+    return sentCount;
+  } catch (error) {
+    console.error('Error sending weekly reports:', error);
+    throw error;
+  }
+};
+
+// Send monthly reports to all users
+const sendMonthlyReports = async () => {
+  try {
+    const users = await User.find({});
+    let sentCount = 0;
+
+    for (const user of users) {
+      try {
+        const reportData = await generateMonthlyReportData(user._id);
+        const result = await sendMonthlyReport(user, reportData);
+        
+        if (result.success) {
+          sentCount++;
+          console.log(`Monthly report sent to ${user.email}`);
+        } else {
+          console.error(`Failed to send monthly report to ${user.email}: ${result.error}`);
+        }
+      } catch (error) {
+        console.error(`Error sending monthly report to ${user.email}:`, error);
+      }
+    }
+
+    console.log(`Monthly reports sent to ${sentCount} users`);
+    return sentCount;
+  } catch (error) {
+    console.error('Error sending monthly reports:', error);
+    throw error;
+  }
+};
+
+// TEST FUNCTION: Process all notifications for testing (ignores scheduled dates)
+const processAllNotificationsForTesting = async () => {
+  try {
+    console.log('Processing ALL notifications for testing...');
+    
+    // Get all pending notifications regardless of date
+    const allNotifications = await Notification.find({
+      status: 'pending'
+    }).populate('task user');
+    
+    let processedCount = 0;
+    
+    for (const notification of allNotifications) {
+      try {
+        let result;
+        
+        // Handle different notification types
+        if (['task-start-date', 'task-due-date'].includes(notification.type)) {
+          result = await sendScheduledDateNotification(
+            notification.type,
+            notification.task,
+            { email: notification.email, _id: notification.user }
+          );
+        } else {
+          result = await sendTaskNotification(
+            notification.type,
+            notification.task,
+            { email: notification.email, _id: notification.user }
+          );
+        }
+
+        if (result.success) {
+          await notification.markAsSent();
+          console.log(`TEST: Notification sent successfully: ${notification.type} for task ${notification.task.title}`);
+          processedCount++;
+        } else {
+          await notification.markAsFailed(result.error);
+          console.error(`TEST: Failed to send notification: ${result.error}`);
+        }
+      } catch (error) {
+        await notification.markAsFailed(error.message);
+        console.error(`TEST: Error processing notification ${notification._id}:`, error);
+      }
+    }
+
+    console.log(`TEST: Processed ${processedCount} notifications`);
+    return processedCount;
+  } catch (error) {
+    console.error('TEST: Error processing all notifications:', error);
+    throw error;
+  }
+};
+
 module.exports = {
+  sendImmediateTaskCreationNotification,
+  sendImmediateTaskActionNotification,
   createTaskNotifications,
   processPendingNotifications,
   checkOverdueTasks,
   updateTaskNotifications,
-  cleanupOldNotifications
+  cleanupOldNotifications,
+  generateWeeklyReportData,
+  generateMonthlyReportData,
+  sendWeeklyReports,
+  sendMonthlyReports,
+  processAllNotificationsForTesting
 };
 
 

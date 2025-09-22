@@ -9,14 +9,19 @@ import {
   Pause,
   CheckCircle,
   Circle,
-  AlertCircle
+  AlertCircle,
+  Trash2,
+  MoreVertical
 } from 'lucide-react';
 import { format, isAfter, isBefore, differenceInDays } from 'date-fns';
 import { useTasks } from '../contexts/TaskContext';
 
-const TaskCard = ({ task, compact = false }) => {
-  const { startTimer, stopTimer } = useTasks();
+const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) => {
+  const { startTimer, stopTimer, deleteTask } = useTasks();
   const [isTimerRunning, setIsTimerRunning] = React.useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
 
   React.useEffect(() => {
     const activeTimer = task.timeTracking?.find(t => !t.endTime);
@@ -89,6 +94,21 @@ const TaskCard = ({ task, compact = false }) => {
     }
   };
 
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteTask(task._id);
+      if (result.success && onDelete) {
+        onDelete(task._id);
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   const formatDate = (date) => {
     return format(new Date(date), 'MMM dd, yyyy');
   };
@@ -135,6 +155,41 @@ const TaskCard = ({ task, compact = false }) => {
                   <Play className="h-3 w-3" />
                 )}
               </button>
+            )}
+            {showDeleteButton && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isDeleting}
+                  className="p-1 text-red-400 hover:text-red-600"
+                  title="Delete task"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+                
+                {showDeleteConfirm && (
+                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10 min-w-48">
+                    <p className="text-xs text-gray-700 mb-2">
+                      Delete "{task.title}"?
+                    </p>
+                    <div className="flex space-x-1">
+                      <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {isDeleting ? 'Deleting...' : 'Yes'}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -241,12 +296,49 @@ const TaskCard = ({ task, compact = false }) => {
             </button>
           )}
 
-          <Link
-            to={`/tasks/${task._id}/edit`}
-            className="text-primary-600 hover:text-primary-800 text-sm font-medium"
-          >
-            Edit
-          </Link>
+          <div className="flex items-center space-x-2">
+            <Link
+              to={`/tasks/${task._id}/edit`}
+              className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+            >
+              Edit
+            </Link>
+            {showDeleteButton && (
+              <div className="relative">
+                <button
+                onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isDeleting}
+                  className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50 border border-red-300 px-2 py-1 rounded"
+                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+                
+                {showDeleteConfirm && (
+                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-64">
+                    <p className="text-sm text-gray-700 mb-3">
+                      Are you sure you want to delete "{task.title}"? This action cannot be undone.
+                    </p>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

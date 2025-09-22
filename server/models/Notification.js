@@ -4,7 +4,7 @@ const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['taskStart', 'taskReminder', 'taskDue', 'taskOverdue', 'taskCompleted']
+    enum: ['task-start', 'task-reminder', 'task-due', 'task-overdue', 'task-completed']
   },
   task: {
     type: mongoose.Schema.Types.ObjectId,
