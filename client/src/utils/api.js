@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+// Development API URL for testing
+//const API_BASE_URL = 'http://localhost:5000/api';
 // Production API URL
 const API_BASE_URL = 'https://aufgabenplanung.onrender.com/api';
 
