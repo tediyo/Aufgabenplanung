@@ -3,3 +3,5 @@ server
 *.md
 .git
 .gitignore
+build
+client/node_modules
