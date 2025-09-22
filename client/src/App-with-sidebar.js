@@ -234,8 +234,22 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
         maxWidth: '500px',
         maxHeight: '90vh',
         overflowY: 'auto',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+        position: 'relative',
+        border: '4px solid transparent',
+        backgroundClip: 'padding-box'
       }}>
+        {/* Colorful Border Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: '-4px',
+          left: '-4px',
+          right: '-4px',
+          bottom: '-4px',
+          background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 25%, #3b82f6 50%, #fbbf24 75%, #f97316 100%)',
+          borderRadius: '16px',
+          zIndex: -1
+        }}></div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ margin: 0, color: '#374151' }}>➕ Create New Task</h2>
           <button

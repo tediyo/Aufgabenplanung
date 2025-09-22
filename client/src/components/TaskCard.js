@@ -168,21 +168,74 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
                 </button>
                 
                 {showDeleteConfirm && (
-                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10 min-w-48">
-                    <p className="text-xs text-gray-700 mb-2">
+                  <div style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '2rem',
+                    background: 'white',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    padding: '0.75rem',
+                    zIndex: 10,
+                    minWidth: '12rem',
+                    position: 'relative',
+                    border: '4px solid transparent',
+                    backgroundClip: 'padding-box'
+                  }}>
+                    {/* Colorful Border Overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      left: '-4px',
+                      right: '-4px',
+                      bottom: '-4px',
+                      background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 25%, #3b82f6 50%, #fbbf24 75%, #f97316 100%)',
+                      borderRadius: '0.75rem',
+                      zIndex: -1
+                    }}></div>
+                    <p style={{ fontSize: '0.75rem', color: '#374151', marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>
                       Delete "{task.title}"?
                     </p>
-                    <div className="flex space-x-1">
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
                       <button
                         onClick={handleDelete}
                         disabled={isDeleting}
-                        className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50"
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          backgroundColor: '#dc2626',
+                          color: 'white',
+                          fontSize: '0.75rem',
+                          borderRadius: '0.25rem',
+                          border: 'none',
+                          cursor: isDeleting ? 'not-allowed' : 'pointer',
+                          opacity: isDeleting ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDeleting) e.target.style.backgroundColor = '#b91c1c';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isDeleting) e.target.style.backgroundColor = '#dc2626';
+                        }}
                       >
                         {isDeleting ? 'Deleting...' : 'Yes'}
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(false)}
-                        className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          backgroundColor: '#d1d5db',
+                          color: '#374151',
+                          fontSize: '0.75rem',
+                          borderRadius: '0.25rem',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#9ca3af';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = '#d1d5db';
+                        }}
                       >
                         Cancel
                       </button>
@@ -315,21 +368,74 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
                 </button>
                 
                 {showDeleteConfirm && (
-                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-64">
-                    <p className="text-sm text-gray-700 mb-3">
+                  <div style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '2rem',
+                    background: 'white',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    padding: '1rem',
+                    zIndex: 10,
+                    minWidth: '16rem',
+                    position: 'relative',
+                    border: '4px solid transparent',
+                    backgroundClip: 'padding-box'
+                  }}>
+                    {/* Colorful Border Overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      left: '-4px',
+                      right: '-4px',
+                      bottom: '-4px',
+                      background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 25%, #3b82f6 50%, #fbbf24 75%, #f97316 100%)',
+                      borderRadius: '0.75rem',
+                      zIndex: -1
+                    }}></div>
+                    <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '0.75rem', margin: '0 0 0.75rem 0' }}>
                       Are you sure you want to delete "{task.title}"? This action cannot be undone.
                     </p>
-                    <div className="flex space-x-2">
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button
                         onClick={handleDelete}
                         disabled={isDeleting}
-                        className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50"
+                        style={{
+                          padding: '0.25rem 0.75rem',
+                          backgroundColor: '#dc2626',
+                          color: 'white',
+                          fontSize: '0.875rem',
+                          borderRadius: '0.25rem',
+                          border: 'none',
+                          cursor: isDeleting ? 'not-allowed' : 'pointer',
+                          opacity: isDeleting ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDeleting) e.target.style.backgroundColor = '#b91c1c';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isDeleting) e.target.style.backgroundColor = '#dc2626';
+                        }}
                       >
                         {isDeleting ? 'Deleting...' : 'Yes, Delete'}
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(false)}
-                        className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                        style={{
+                          padding: '0.25rem 0.75rem',
+                          backgroundColor: '#d1d5db',
+                          color: '#374151',
+                          fontSize: '0.875rem',
+                          borderRadius: '0.25rem',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#9ca3af';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = '#d1d5db';
+                        }}
                       >
                         Cancel
                       </button>

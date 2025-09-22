@@ -35,58 +35,86 @@ const NotificationModal = ({
     }
   };
 
-  const getBackgroundColor = () => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-50 border-green-200';
-      case 'error':
-        return 'bg-red-50 border-red-200';
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'info':
-        return 'bg-blue-50 border-blue-200';
-      default:
-        return 'bg-green-50 border-green-200';
-    }
-  };
-
-  const getTextColor = () => {
-    switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
-      case 'warning':
-        return 'text-yellow-800';
-      case 'info':
-        return 'text-blue-800';
-      default:
-        return 'text-green-800';
-    }
-  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`max-w-md w-full mx-4 p-6 rounded-lg border-2 ${getBackgroundColor()} shadow-lg`}>
-        <div className="flex items-start">
-          <div className="flex-shrink-0">
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 50
+    }}>
+      <div style={{
+        maxWidth: '28rem',
+        width: '100%',
+        margin: '0 1rem',
+        padding: '1.5rem',
+        borderRadius: '0.5rem',
+        background: 'white',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+        position: 'relative',
+        border: '4px solid transparent',
+        backgroundClip: 'padding-box'
+      }}>
+        {/* Colorful Border Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: '-4px',
+          left: '-4px',
+          right: '-4px',
+          bottom: '-4px',
+          background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 25%, #3b82f6 50%, #fbbf24 75%, #f97316 100%)',
+          borderRadius: '0.75rem',
+          zIndex: -1
+        }}></div>
+        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+          <div style={{ flexShrink: 0 }}>
             {getIcon()}
           </div>
-          <div className="ml-3 flex-1">
-            <h3 className={`text-lg font-semibold ${getTextColor()}`}>
+          <div style={{ marginLeft: '0.75rem', flex: 1 }}>
+            <h3 style={{
+              fontSize: '1.125rem',
+              fontWeight: '600',
+              color: '#1f2937',
+              margin: 0
+            }}>
               {title}
             </h3>
-            <p className={`mt-1 text-sm ${getTextColor()} opacity-90`}>
+            <p style={{
+              marginTop: '0.25rem',
+              fontSize: '0.875rem',
+              color: '#6b7280',
+              margin: '0.25rem 0 0 0'
+            }}>
               {message}
             </p>
           </div>
-          <div className="ml-4 flex-shrink-0">
+          <div style={{ marginLeft: '1rem', flexShrink: 0 }}>
             <button
               onClick={onClose}
-              className={`inline-flex rounded-md p-1.5 ${getTextColor()} hover:opacity-75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50`}
+              style={{
+                display: 'inline-flex',
+                borderRadius: '0.375rem',
+                padding: '0.375rem',
+                color: '#6b7280',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.opacity = '0.75';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.opacity = '1';
+              }}
             >
-              <span className="sr-only">Close</span>
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <span style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>Close</span>
+              <svg style={{ height: '1.25rem', width: '1.25rem' }} viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </button>
