@@ -192,11 +192,15 @@ router.post('/', auth, [
 
     await task.save();
 
-    // Send immediate task creation notification
-    await sendImmediateTaskCreationNotification(task, req.user);
+    // Send immediate task creation notification (non-blocking)
+    sendImmediateTaskCreationNotification(task, req.user).catch(error => {
+      console.error('Failed to send task creation notification:', error);
+    });
 
-    // Create scheduled notifications for the task
-    await createTaskNotifications(task, req.user);
+    // Create scheduled notifications for the task (non-blocking)
+    createTaskNotifications(task, req.user).catch(error => {
+      console.error('Failed to create task notifications:', error);
+    });
 
     // If this is a subtask, add it to parent task
     if (parentTask) {
