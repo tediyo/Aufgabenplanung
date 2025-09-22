@@ -2,6 +2,36 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import NotificationModal from './components/NotificationModal';
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h2>Something went wrong.</h2>
+          <p>Error: {this.state.error?.message}</p>
+          <button onClick={() => window.location.reload()}>Reload Page</button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // Sidebar Component
 const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, filter, setFilter }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
@@ -2605,24 +2635,28 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   React.useEffect(() => {
+    console.log('App component mounted');
     const user = localStorage.getItem('user');
+    console.log('User from localStorage:', user);
     if (user) {
       setIsLoggedIn(true);
     }
   }, []);
 
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="*" element={isLoggedIn ? <Dashboard /> : <Login />} />
-        </Routes>
-      </div>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="*" element={isLoggedIn ? <Dashboard /> : <Login />} />
+          </Routes>
+        </div>
+      </Router>
+    </ErrorBoundary>
   );
 }
 
