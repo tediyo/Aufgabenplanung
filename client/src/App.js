@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import NotificationModal from './components/NotificationModal';
 
 // Sidebar Component
-const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask }) => {
-  const [filter, setFilter] = useState('all');
+const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, filter, setFilter }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -16,10 +15,22 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask }) 
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'done': return '✅';
-      case 'in-progress': return '🔄';
-      case 'todo': return '📋';
-      default: return '📋';
+      case 'done': 
+        return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>;
+      case 'in-progress': 
+        return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>;
+      case 'todo': 
+        return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+        </svg>;
+      default: 
+        return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+        </svg>;
     }
   };
 
@@ -35,58 +46,151 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask }) 
 
   return (
     <div style={{
-      width: '300px',
+      width: '320px',
       height: '100vh',
-      background: '#1f2937',
+      background: 'linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%)',
       color: 'white',
-      padding: '20px',
+      padding: '24px',
       overflowY: 'auto',
       position: 'fixed',
       left: 0,
       top: 0,
-      zIndex: 1000
+      zIndex: 1000,
+      boxShadow: '4px 0 20px rgba(0, 0, 0, 0.1)',
+      borderRight: '1px solid rgba(255, 255, 255, 0.1)'
     }}>
       {/* Header */}
-      <div style={{ marginBottom: '30px' }}>
-        <h2 style={{ margin: '0 0 10px 0', color: '#f9fafb' }}>📋 Task Manager</h2>
-        <p style={{ margin: 0, color: '#9ca3af', fontSize: '14px' }}>Complete task management</p>
+      <div style={{ 
+        marginBottom: '32px',
+        paddingBottom: '24px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '12px',
+          marginBottom: '8px'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '20px',
+            boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10,9 9,9 8,9"/>
+            </svg>
+          </div>
+          <div>
+            <h2 style={{ 
+              margin: 0, 
+              color: '#f8fafc', 
+              fontSize: '20px',
+              fontWeight: '700',
+              letterSpacing: '-0.025em'
+            }}>Task Manager</h2>
+            <p style={{ 
+              margin: 0, 
+              color: '#cbd5e1', 
+              fontSize: '13px',
+              fontWeight: '500'
+            }}>Complete task management</p>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
-      <div style={{ marginBottom: '20px' }}>
-        <input
-          type="text"
-          placeholder="Search tasks..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '10px',
-            borderRadius: '6px',
-            border: '1px solid #374151',
-            background: '#374151',
-            color: 'white',
-            fontSize: '14px'
-          }}
-        />
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 16px 12px 44px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: '#f8fafc',
+              fontSize: '14px',
+              fontWeight: '500',
+              outline: 'none',
+              transition: 'all 0.2s ease',
+              backdropFilter: 'blur(10px)'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#f97316';
+              e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
+          />
+          <div style={{
+            position: 'absolute',
+            left: '16px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: '#cbd5e1',
+            fontSize: '16px'
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Filter Buttons */}
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {['all', 'todo', 'in-progress', 'done'].map(status => (
             <button
               key={status}
               onClick={() => setFilter(status)}
               style={{
-                padding: '6px 12px',
-                borderRadius: '20px',
-                border: 'none',
-                background: filter === status ? '#3b82f6' : '#374151',
-                color: 'white',
-                fontSize: '12px',
+                padding: '8px 16px',
+                borderRadius: '10px',
+                background: filter === status 
+                  ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' 
+                  : 'rgba(255, 255, 255, 0.1)',
+                color: filter === status ? '#ffffff' : '#cbd5e1',
+                fontSize: '13px',
+                fontWeight: '600',
                 cursor: 'pointer',
-                textTransform: 'capitalize'
+                textTransform: 'capitalize',
+                transition: 'all 0.2s ease',
+                boxShadow: filter === status 
+                  ? '0 4px 12px rgba(249, 115, 22, 0.3)' 
+                  : 'none',
+                border: filter === status 
+                  ? 'none' 
+                  : '1px solid rgba(255, 255, 255, 0.2)'
+              }}
+              onMouseEnter={(e) => {
+                if (filter !== status) {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.target.style.color = '#f8fafc';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filter !== status) {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.target.style.color = '#cbd5e1';
+                }
               }}
             >
               {status.replace('-', ' ')}
@@ -97,21 +201,69 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask }) 
 
       {/* Task List */}
       <div>
-        <h3 style={{ margin: '0 0 15px 0', color: '#f9fafb', fontSize: '16px' }}>
-          Tasks ({filteredTasks.length})
-        </h3>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '16px'
+        }}>
+          <h3 style={{ 
+            margin: 0, 
+            color: '#f8fafc', 
+            fontSize: '16px',
+            fontWeight: '700',
+            letterSpacing: '-0.025em'
+          }}>
+            Tasks
+          </h3>
+          <div style={{
+            background: 'rgba(249, 115, 22, 0.1)',
+            color: '#f97316',
+            padding: '4px 12px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            fontWeight: '600'
+          }}>
+            {filteredTasks.length}
+          </div>
+        </div>
         <div style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
           {filteredTasks.map(task => (
             <div
               key={task._id}
               style={{
-                padding: '12px',
-                marginBottom: '8px',
-                borderRadius: '8px',
-                background: selectedTask?._id === task._id ? '#3b82f6' : '#374151',
-                border: '1px solid #4b5563',
-                transition: 'all 0.2s',
-                position: 'relative'
+                padding: '16px',
+                marginBottom: '12px',
+                borderRadius: '16px',
+                background: selectedTask?._id === task._id 
+                  ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' 
+                  : 'rgba(255, 255, 255, 0.1)',
+                border: selectedTask?._id === task._id 
+                  ? '1px solid rgba(249, 115, 22, 0.3)' 
+                  : '1px solid rgba(255, 255, 255, 0.1)',
+                transition: 'all 0.3s ease',
+                position: 'relative',
+                backdropFilter: 'blur(10px)',
+                boxShadow: selectedTask?._id === task._id 
+                  ? '0 8px 32px rgba(249, 115, 22, 0.2)' 
+                  : '0 4px 16px rgba(0, 0, 0, 0.1)',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                if (selectedTask?._id !== task._id) {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedTask?._id !== task._id) {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
+                }
               }}
             >
               {/* Main task content - clickable */}
@@ -119,37 +271,95 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask }) 
                 onClick={() => onTaskSelect(task)}
                 style={{ cursor: 'pointer' }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '16px' }}>{getStatusIcon(task.status)}</span>
-                  <span style={{ 
-                    fontSize: '14px', 
-                    fontWeight: '600',
-                    color: selectedTask?._id === task._id ? 'white' : '#f9fafb'
-                  }}>
-                    {task.title}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: getPriorityColor(task.priority)
-                  }}></span>
-                  <span style={{ 
-                    fontSize: '12px', 
-                    color: selectedTask?._id === task._id ? '#e5e7eb' : '#9ca3af',
-                    textTransform: 'capitalize'
-                  }}>
-                    {task.priority} • {task.category}
-                  </span>
-                </div>
                 <div style={{ 
-                  fontSize: '12px', 
-                  color: selectedTask?._id === task._id ? '#e5e7eb' : '#9ca3af',
-                  marginTop: '4px'
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  marginBottom: '8px' 
                 }}>
-                  {task.progress}% complete
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    background: selectedTask?._id === task._id 
+                      ? 'rgba(255, 255, 255, 0.2)' 
+                      : 'rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '16px'
+                  }}>
+                    {getStatusIcon(task.status)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ 
+                      fontSize: '15px', 
+                      fontWeight: '600',
+                      color: selectedTask?._id === task._id ? '#ffffff' : '#f8fafc',
+                      marginBottom: '4px',
+                      lineHeight: '1.3',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {task.title}
+                    </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px',
+                      marginBottom: '6px'
+                    }}>
+                      <div style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: getPriorityColor(task.priority)
+                      }}></div>
+                      <span style={{ 
+                        fontSize: '12px', 
+                        color: selectedTask?._id === task._id ? '#e2e8f0' : '#cbd5e1',
+                        textTransform: 'capitalize',
+                        fontWeight: '500'
+                      }}>
+                        {task.priority} • {task.category}
+                      </span>
+                    </div>
+                    <div style={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <div style={{
+                        flex: 1,
+                        height: '4px',
+                        background: selectedTask?._id === task._id 
+                          ? 'rgba(255, 255, 255, 0.2)' 
+                          : 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: '2px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          width: `${task.progress}%`,
+                          height: '100%',
+                          background: selectedTask?._id === task._id 
+                            ? '#ffffff' 
+                            : '#f97316',
+                          borderRadius: '2px',
+                          transition: 'width 0.3s ease'
+                        }}></div>
+                      </div>
+                      <span style={{ 
+                        fontSize: '11px', 
+                        color: selectedTask?._id === task._id ? '#e2e8f0' : '#cbd5e1',
+                        fontWeight: '600',
+                        minWidth: '32px',
+                        textAlign: 'right'
+                      }}>
+                        {task.progress}%
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -161,25 +371,36 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask }) 
                 }}
                 style={{
                   position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  background: 'rgba(239, 68, 68, 0.2)',
-                  border: '1px solid #ef4444',
-                  borderRadius: '4px',
+                  top: '12px',
+                  right: '12px',
+                  width: '28px',
+                  height: '28px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '8px',
                   color: '#ef4444',
-                  padding: '4px 6px',
-                  fontSize: '12px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  backdropFilter: 'blur(10px)'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(239, 68, 68, 0.3)';
+                  e.target.style.background = 'rgba(239, 68, 68, 0.2)';
+                  e.target.style.borderColor = '#ef4444';
+                  e.target.style.transform = 'scale(1.05)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = 'rgba(239, 68, 68, 0.2)';
+                  e.target.style.background = 'rgba(239, 68, 68, 0.1)';
+                  e.target.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                  e.target.style.transform = 'scale(1)';
                 }}
               >
-                🗑️
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 6h18l-2 13H5L3 6zM8 4V2h8v2H8zM6 8v10h12V8H6z"/>
+                </svg>
               </button>
 
               {/* Delete confirmation */}
@@ -202,10 +423,23 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask }) 
                     background: '#374151',
                     padding: '12px',
                     borderRadius: '6px',
-                    border: '1px solid #4b5563',
                     textAlign: 'center',
-                    maxWidth: '200px'
+                    maxWidth: '200px',
+                    position: 'relative',
+                    border: '4px solid transparent',
+                    backgroundClip: 'padding-box'
                   }}>
+                    {/* Colorful Border Overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      left: '-4px',
+                      right: '-4px',
+                      bottom: '-4px',
+                      background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 25%, #3b82f6 50%, #fbbf24 75%, #f97316 100%)',
+                      borderRadius: '10px',
+                      zIndex: -1
+                    }}></div>
                     <p style={{ 
                       color: '#f9fafb', 
                       fontSize: '12px', 
@@ -344,8 +578,22 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
         maxWidth: '500px',
         maxHeight: '90vh',
         overflowY: 'auto',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+        position: 'relative',
+        border: '4px solid transparent',
+        backgroundClip: 'padding-box'
       }}>
+        {/* Colorful Border Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: '-4px',
+          left: '-4px',
+          right: '-4px',
+          bottom: '-4px',
+          background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 25%, #3b82f6 50%, #fbbf24 75%, #f97316 100%)',
+          borderRadius: '16px',
+          zIndex: -1
+        }}></div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ margin: 0, color: '#374151' }}>➕ Create New Task</h2>
           <button
@@ -362,7 +610,12 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={{
+          border: '1px solid #f3f4f6',
+          borderRadius: '8px',
+          padding: '20px',
+          backgroundColor: '#fafafa'
+        }}>
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', color: '#374151', fontWeight: '500' }}>
               Task Title *
@@ -377,7 +630,14 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
                 border: '2px solid #e5e7eb',
                 borderRadius: '8px',
                 fontSize: '16px',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3b82f6';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e5e7eb';
               }}
               placeholder="Enter task title"
               required
@@ -599,6 +859,8 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState(null);
   
   // Notification state
   const [notification, setNotification] = useState({
@@ -833,16 +1095,31 @@ const Dashboard = () => {
   return (
     <div style={{ 
       minHeight: '100vh', 
-      background: '#f8fafc', 
-      fontFamily: 'Arial, sans-serif',
-      marginLeft: '300px' // Account for sidebar
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      marginLeft: '320px', // Account for sidebar
+      position: 'relative'
     }}>
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+          }
+        `}
+      </style>
       {/* Sidebar */}
       <Sidebar 
         tasks={tasks} 
         onTaskSelect={setSelectedTask}
         selectedTask={selectedTask}
         onDeleteTask={handleDeleteTask}
+        filter={filter}
+        setFilter={setFilter}
         onLogout={async () => {
           try {
             // Clear local storage
@@ -862,14 +1139,16 @@ const Dashboard = () => {
       />
 
       {/* Main Content */}
-      <div style={{ padding: '20px' }}>
+      <div style={{ padding: '32px' }}>
         {/* Header */}
         <div style={{ 
-          background: 'white', 
-          padding: '20px', 
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          marginBottom: '20px'
+          background: 'rgba(255, 255, 255, 0.8)', 
+          padding: '32px', 
+          borderRadius: '20px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+          marginBottom: '32px',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          backdropFilter: 'blur(20px)'
         }}>
           <div style={{ 
             display: 'flex', 
@@ -877,78 +1156,857 @@ const Dashboard = () => {
             alignItems: 'center'
           }}>
             <div>
-              <h1 style={{ margin: 0, color: '#374151', fontSize: '28px' }}>📊 Task Dashboard</h1>
-              <p style={{ margin: '5px 0 0 0', color: '#6b7280' }}>Complete task management and analytics</p>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '16px',
+                marginBottom: '8px'
+              }}>
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)'
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h1 style={{ 
+                    margin: 0, 
+                    color: '#0f172a', 
+                    fontSize: '32px',
+                    fontWeight: '800',
+                    letterSpacing: '-0.025em'
+                  }}>Task Dashboard</h1>
+                  <p style={{ 
+                    margin: '4px 0 0 0', 
+                    color: '#64748b',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}>Complete task management and analytics</p>
+                </div>
+              </div>
             </div>
             <button
               onClick={() => setShowModal(true)}
               style={{
-                padding: '12px 24px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                padding: '16px 32px',
+                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
                 color: 'white',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: '16px',
                 fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer'
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 8px 24px rgba(249, 115, 22, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 12px 32px rgba(249, 115, 22, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 8px 24px rgba(249, 115, 22, 0.3)';
               }}
             >
-              ➕ Add New Task
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+              </svg>
+              Add New Task
             </button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
           gap: '20px', 
-          marginBottom: '30px' 
+          marginBottom: '40px'
         }}>
           <div style={{ 
-            background: 'white', 
+            background: 'rgba(255, 255, 255, 0.8)', 
             padding: '24px', 
-            borderRadius: '12px', 
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#3b82f6' }}>{stats.total}</div>
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>Total Tasks</div>
+            borderRadius: '20px', 
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(20px)',
+            transition: 'all 0.3s ease',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.12)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.08)';
+          }}
+          >
+            {/* Background Pattern */}
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '120px',
+              height: '120px',
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.05) 100%)',
+              borderRadius: '50%',
+              zIndex: 0
+            }}></div>
+            
+            {/* Content */}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: '16px'
+              }}>
+                <div>
+                  <div style={{ 
+                    fontSize: '36px', 
+                    fontWeight: '800', 
+                    color: '#3b82f6',
+                    marginBottom: '4px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>{stats.total}</div>
+                  <div style={{ 
+                    color: '#64748b', 
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>Total Tasks</div>
+                </div>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Progress Bar */}
+              <div style={{
+                width: '100%',
+                height: '6px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                borderRadius: '3px',
+                overflow: 'hidden',
+                marginBottom: '12px'
+              }}>
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
+                  borderRadius: '3px',
+                  animation: 'pulse 2s ease-in-out infinite'
+                }}></div>
+              </div>
+              
+              {/* Action Button */}
+              <button 
+                onClick={() => {
+                  // Filter to show all tasks
+                  setFilter('all');
+                  setSelectedCategory('all');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 16px',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  borderRadius: '8px',
+                  color: '#3b82f6',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(59, 130, 246, 0.2)';
+                  e.target.style.borderColor = '#3b82f6';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(59, 130, 246, 0.1)';
+                  e.target.style.borderColor = 'rgba(59, 130, 246, 0.2)';
+                }}
+              >
+                View All Tasks
+              </button>
+            </div>
           </div>
           <div style={{ 
-            background: 'white', 
+            background: 'rgba(255, 255, 255, 0.8)', 
             padding: '24px', 
-            borderRadius: '12px', 
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#10b981' }}>{stats.completed}</div>
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>Completed</div>
+            borderRadius: '20px', 
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(20px)',
+            transition: 'all 0.3s ease',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.12)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.08)';
+          }}
+          >
+            {/* Background Pattern */}
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '120px',
+              height: '120px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
+              borderRadius: '50%',
+              zIndex: 0
+            }}></div>
+            
+            {/* Content */}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: '16px'
+              }}>
+                <div>
+                  <div style={{ 
+                    fontSize: '36px', 
+                    fontWeight: '800', 
+                    color: '#10b981',
+                    marginBottom: '4px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>{stats.completed}</div>
+                  <div style={{ 
+                    color: '#64748b', 
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>Completed</div>
+                </div>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Circular Progress */}
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'conic-gradient(#10b981 0deg, #10b981 ' + (stats.completed / stats.total * 360) + 'deg, rgba(16, 185, 129, 0.1) ' + (stats.completed / stats.total * 360) + 'deg)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
+                position: 'relative'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  color: '#10b981'
+                }}>
+                  {Math.round((stats.completed / stats.total) * 100)}%
+                </div>
+              </div>
+              
+              {/* Action Button */}
+              <button 
+                onClick={() => {
+                  // Filter to show completed tasks
+                  setFilter('done');
+                  setSelectedCategory('done');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 16px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  borderRadius: '8px',
+                  color: '#10b981',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(16, 185, 129, 0.2)';
+                  e.target.style.borderColor = '#10b981';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(16, 185, 129, 0.1)';
+                  e.target.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                }}
+              >
+                View Completed
+              </button>
+            </div>
           </div>
           <div style={{ 
-            background: 'white', 
+            background: 'rgba(255, 255, 255, 0.8)', 
             padding: '24px', 
-            borderRadius: '12px', 
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#f59e0b' }}>{stats.inProgress}</div>
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>In Progress</div>
+            borderRadius: '20px', 
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(20px)',
+            transition: 'all 0.3s ease',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.12)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.08)';
+          }}
+          >
+            {/* Background Pattern */}
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '120px',
+              height: '120px',
+              background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%)',
+              borderRadius: '50%',
+              zIndex: 0
+            }}></div>
+            
+            {/* Content */}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: '16px'
+              }}>
+                <div>
+                  <div style={{ 
+                    fontSize: '36px', 
+                    fontWeight: '800', 
+                    color: '#f97316',
+                    marginBottom: '4px',
+                    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>{stats.inProgress}</div>
+                  <div style={{ 
+                    color: '#64748b', 
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>In Progress</div>
+                </div>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)',
+                  animation: 'spin 2s linear infinite'
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Progress Bars */}
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  marginBottom: '4px',
+                  fontSize: '11px',
+                  color: '#64748b',
+                  fontWeight: '600'
+                }}>
+                  <span>Active</span>
+                  <span>{stats.inProgress}</span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '4px',
+                  background: 'rgba(249, 115, 22, 0.1)',
+                  borderRadius: '2px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    width: `${(stats.inProgress / stats.total) * 100}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)',
+                    borderRadius: '2px',
+                    transition: 'width 0.3s ease'
+                  }}></div>
+                </div>
+              </div>
+              
+              {/* Action Button */}
+              <button 
+                onClick={() => {
+                  // Filter to show in-progress tasks
+                  setFilter('in-progress');
+                  setSelectedCategory('in-progress');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 16px',
+                  background: 'rgba(249, 115, 22, 0.1)',
+                  border: '1px solid rgba(249, 115, 22, 0.2)',
+                  borderRadius: '8px',
+                  color: '#f97316',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(249, 115, 22, 0.2)';
+                  e.target.style.borderColor = '#f97316';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(249, 115, 22, 0.1)';
+                  e.target.style.borderColor = 'rgba(249, 115, 22, 0.2)';
+                }}
+              >
+                View Active Tasks
+              </button>
+            </div>
           </div>
           <div style={{ 
-            background: 'white', 
+            background: 'rgba(255, 255, 255, 0.8)', 
             padding: '24px', 
-            borderRadius: '12px', 
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#8b5cf6' }}>{stats.completionRate}%</div>
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>Completion Rate</div>
+            borderRadius: '20px', 
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(20px)',
+            transition: 'all 0.3s ease',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.12)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.08)';
+          }}
+          >
+            {/* Background Pattern */}
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '120px',
+              height: '120px',
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+              borderRadius: '50%',
+              zIndex: 0
+            }}></div>
+            
+            {/* Content */}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: '16px'
+              }}>
+                <div>
+                  <div style={{ 
+                    fontSize: '36px', 
+                    fontWeight: '800', 
+                    color: '#8b5cf6',
+                    marginBottom: '4px',
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>{stats.completionRate}%</div>
+                  <div style={{ 
+                    color: '#64748b', 
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>Completion Rate</div>
+                </div>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Donut Chart */}
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: `conic-gradient(#8b5cf6 0deg, #8b5cf6 ${stats.completionRate * 3.6}deg, rgba(139, 92, 246, 0.1) ${stats.completionRate * 3.6}deg)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
+                position: 'relative'
+              }}>
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  color: '#8b5cf6',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                  {stats.completionRate}%
+                </div>
+              </div>
+              
+              {/* Action Button */}
+              <button 
+                onClick={() => {
+                  // Show all tasks for analytics view
+                  setFilter('all');
+                  setSelectedCategory('analytics');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 16px',
+                  background: 'rgba(139, 92, 246, 0.1)',
+                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                  borderRadius: '8px',
+                  color: '#8b5cf6',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(139, 92, 246, 0.2)';
+                  e.target.style.borderColor = '#8b5cf6';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(139, 92, 246, 0.1)';
+                  e.target.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                }}
+              >
+                View Analytics
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Task Cards Display - Only show when a category is selected */}
+        {selectedCategory && (
+          <div style={{ marginBottom: '40px' }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              marginBottom: '24px'
+            }}>
+              <h2 style={{ 
+                color: '#0f172a', 
+                fontSize: '24px',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                margin: 0
+              }}>
+                <div style={{
+                  width: '4px',
+                  height: '24px',
+                  background: selectedCategory === 'all' ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' :
+                             selectedCategory === 'done' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
+                             selectedCategory === 'in-progress' ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
+                             'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                  borderRadius: '2px'
+                }}></div>
+                {selectedCategory === 'all' ? 'All Tasks' :
+                 selectedCategory === 'done' ? 'Completed Tasks' :
+                 selectedCategory === 'in-progress' ? 'Active Tasks' :
+                 selectedCategory === 'analytics' ? 'Analytics Overview' : 'Tasks'}
+              </h2>
+              <button 
+                onClick={() => setSelectedCategory(null)}
+                style={{
+                  padding: '8px 16px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  borderRadius: '8px',
+                  color: '#ef4444',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(239, 68, 68, 0.2)';
+                  e.target.style.borderColor = '#ef4444';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(239, 68, 68, 0.1)';
+                  e.target.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                }}
+              >
+                Close View
+              </button>
+            </div>
+            
+            {/* Single Task Card for Selected Category */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.08)'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px',
+                marginBottom: '20px'
+              }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: selectedCategory === 'all' ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' :
+                             selectedCategory === 'done' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
+                             selectedCategory === 'in-progress' ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
+                             'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {selectedCategory === 'all' ? (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                  ) : selectedCategory === 'done' ? (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                  ) : selectedCategory === 'in-progress' ? (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  ) : (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <h3 style={{ 
+                    margin: 0, 
+                    color: '#0f172a', 
+                    fontSize: '20px',
+                    fontWeight: '700'
+                  }}>
+                    {selectedCategory === 'all' ? 'All Tasks' :
+                     selectedCategory === 'done' ? 'Completed Tasks' :
+                     selectedCategory === 'in-progress' ? 'Active Tasks' :
+                     selectedCategory === 'analytics' ? 'Analytics Overview' : 'Tasks'}
+                  </h3>
+                  <p style={{ 
+                    margin: 0, 
+                    color: '#64748b', 
+                    fontSize: '16px'
+                  }}>
+                    {selectedCategory === 'all' ? `${tasks.length} total tasks` :
+                     selectedCategory === 'done' ? `${tasks.filter(t => t.status === 'done').length} completed tasks` :
+                     selectedCategory === 'in-progress' ? `${tasks.filter(t => t.status === 'in-progress').length} active tasks` :
+                     selectedCategory === 'analytics' ? `${tasks.length} tasks for analysis` : 'Tasks'}
+                  </p>
+                </div>
+              </div>
+              
+              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {(() => {
+                  let filteredTasks = [];
+                  if (selectedCategory === 'all') {
+                    filteredTasks = tasks;
+                  } else if (selectedCategory === 'done') {
+                    filteredTasks = tasks.filter(t => t.status === 'done');
+                  } else if (selectedCategory === 'in-progress') {
+                    filteredTasks = tasks.filter(t => t.status === 'in-progress');
+                  } else if (selectedCategory === 'analytics') {
+                    filteredTasks = tasks;
+                  }
+                  
+                  return filteredTasks.map(task => (
+                    <div key={task._id} style={{
+                      padding: '16px',
+                      background: selectedCategory === 'all' ? 'rgba(59, 130, 246, 0.05)' :
+                                 selectedCategory === 'done' ? 'rgba(16, 185, 129, 0.05)' :
+                                 selectedCategory === 'in-progress' ? 'rgba(249, 115, 22, 0.05)' :
+                                 'rgba(139, 92, 246, 0.05)',
+                      borderRadius: '12px',
+                      marginBottom: '12px',
+                      border: selectedCategory === 'all' ? '1px solid rgba(59, 130, 246, 0.1)' :
+                             selectedCategory === 'done' ? '1px solid rgba(16, 185, 129, 0.1)' :
+                             selectedCategory === 'in-progress' ? '1px solid rgba(249, 115, 22, 0.1)' :
+                             '1px solid rgba(139, 92, 246, 0.1)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onClick={() => setSelectedTask(task)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = selectedCategory === 'all' ? 'rgba(59, 130, 246, 0.1)' :
+                                                      selectedCategory === 'done' ? 'rgba(16, 185, 129, 0.1)' :
+                                                      selectedCategory === 'in-progress' ? 'rgba(249, 115, 22, 0.1)' :
+                                                      'rgba(139, 92, 246, 0.1)';
+                      e.currentTarget.style.borderColor = selectedCategory === 'all' ? 'rgba(59, 130, 246, 0.2)' :
+                                                      selectedCategory === 'done' ? 'rgba(16, 185, 129, 0.2)' :
+                                                      selectedCategory === 'in-progress' ? 'rgba(249, 115, 22, 0.2)' :
+                                                      'rgba(139, 92, 246, 0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = selectedCategory === 'all' ? 'rgba(59, 130, 246, 0.05)' :
+                                                      selectedCategory === 'done' ? 'rgba(16, 185, 129, 0.05)' :
+                                                      selectedCategory === 'in-progress' ? 'rgba(249, 115, 22, 0.05)' :
+                                                      'rgba(139, 92, 246, 0.05)';
+                      e.currentTarget.style.borderColor = selectedCategory === 'all' ? 'rgba(59, 130, 246, 0.1)' :
+                                                      selectedCategory === 'done' ? 'rgba(16, 185, 129, 0.1)' :
+                                                      selectedCategory === 'in-progress' ? 'rgba(249, 115, 22, 0.1)' :
+                                                      'rgba(139, 92, 246, 0.1)';
+                    }}
+                    >
+                      <div style={{ 
+                        fontSize: '16px', 
+                        fontWeight: '600', 
+                        color: '#0f172a',
+                        marginBottom: '6px'
+                      }}>{task.title}</div>
+                      <div style={{ 
+                        fontSize: '14px', 
+                        color: '#64748b',
+                        textTransform: 'capitalize',
+                        marginBottom: '4px'
+                      }}>{task.status} • {task.priority} • {task.category}</div>
+                      {task.description && (
+                        <div style={{ 
+                          fontSize: '13px', 
+                          color: '#64748b',
+                          fontStyle: 'italic',
+                          marginTop: '4px'
+                        }}>{task.description}</div>
+                      )}
+                    </div>
+                  ));
+                })()}
+                
+                {(() => {
+                  let filteredTasks = [];
+                  if (selectedCategory === 'all') {
+                    filteredTasks = tasks;
+                  } else if (selectedCategory === 'done') {
+                    filteredTasks = tasks.filter(t => t.status === 'done');
+                  } else if (selectedCategory === 'in-progress') {
+                    filteredTasks = tasks.filter(t => t.status === 'in-progress');
+                  } else if (selectedCategory === 'analytics') {
+                    filteredTasks = tasks;
+                  }
+                  
+                  if (filteredTasks.length === 0) {
+                    return (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '40px',
+                        color: '#64748b',
+                        fontSize: '16px',
+                        fontStyle: 'italic'
+                      }}>
+                        {selectedCategory === 'all' ? 'No tasks available' :
+                         selectedCategory === 'done' ? 'No completed tasks yet' :
+                         selectedCategory === 'in-progress' ? 'No active tasks' :
+                         'No tasks for analysis'}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Task Details */}
-        {selectedTask ? (
+        {selectedTask && (
           <div style={{ 
             background: 'white', 
             borderRadius: '12px', 
@@ -1066,32 +2124,6 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
-          </div>
-        ) : (
-          <div style={{ 
-            background: 'white', 
-            padding: '40px', 
-            borderRadius: '12px', 
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
-            <h3 style={{ color: '#374151', marginBottom: '10px' }}>Select a Task</h3>
-            <p style={{ color: '#6b7280', marginBottom: '20px' }}>Choose a task from the sidebar to view details and manage it</p>
-            <button
-              onClick={() => setShowModal(true)}
-              style={{
-                padding: '12px 24px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
-                cursor: 'pointer'
-              }}
-            >
-              ➕ Create Your First Task
-            </button>
           </div>
         )}
 
