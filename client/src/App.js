@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { authAPI } from './utils/api';
 import NotificationModal from './components/NotificationModal';
 
 // Error Boundary Component
@@ -141,13 +142,13 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, fi
       {/* Search */}
       <div style={{ marginBottom: '24px' }}>
         <div style={{ position: 'relative' }}>
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
+        <input
+          type="text"
+          placeholder="Search tasks..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: '100%',
               padding: '12px 16px 12px 44px',
               border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '12px',
@@ -245,7 +246,7 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, fi
             letterSpacing: '-0.025em'
           }}>
             Tasks
-          </h3>
+        </h3>
           <div style={{
             background: 'rgba(249, 115, 22, 0.1)',
             color: '#f97316',
@@ -324,16 +325,16 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, fi
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ 
                       fontSize: '15px', 
-                      fontWeight: '600',
+                  fontWeight: '600',
                       color: selectedTask?._id === task._id ? '#ffffff' : '#f8fafc',
                       marginBottom: '4px',
                       lineHeight: '1.3',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
-                    }}>
-                      {task.title}
-                    </div>
+                }}>
+                  {task.title}
+              </div>
                     <div style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
@@ -343,19 +344,19 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, fi
                       <div style={{
                         width: '6px',
                         height: '6px',
-                        borderRadius: '50%',
-                        background: getPriorityColor(task.priority)
+                  borderRadius: '50%',
+                  background: getPriorityColor(task.priority)
                       }}></div>
-                      <span style={{ 
-                        fontSize: '12px', 
+                <span style={{ 
+                  fontSize: '12px', 
                         color: selectedTask?._id === task._id ? '#e2e8f0' : '#cbd5e1',
                         textTransform: 'capitalize',
                         fontWeight: '500'
-                      }}>
-                        {task.priority} • {task.category}
-                      </span>
-                    </div>
-                    <div style={{ 
+                }}>
+                  {task.priority} • {task.category}
+                </span>
+              </div>
+              <div style={{ 
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px'
@@ -472,7 +473,7 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, fi
                     }}></div>
                     <p style={{ 
                       color: '#f9fafb', 
-                      fontSize: '12px', 
+                fontSize: '12px', 
                       margin: '0 0 8px 0' 
                     }}>
                       Delete "{task.title}"?
@@ -513,7 +514,7 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, fi
                       >
                         Cancel
                       </button>
-                    </div>
+              </div>
                   </div>
                 </div>
               )}
@@ -922,7 +923,7 @@ const Dashboard = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+      const response = await fetch(`https://aufgabenplanung.onrender.com/api/tasks/${taskId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -956,7 +957,7 @@ const Dashboard = () => {
   const loadTasks = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/tasks', {
+      const response = await fetch('https://aufgabenplanung.onrender.com/api/tasks', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -979,7 +980,7 @@ const Dashboard = () => {
   const addTask = async (newTask) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/tasks', {
+      const response = await fetch('https://aufgabenplanung.onrender.com/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1015,7 +1016,7 @@ const Dashboard = () => {
   const updateTaskStatus = async (id, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}`, {
+      const response = await fetch(`https://aufgabenplanung.onrender.com/api/tasks/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1047,7 +1048,7 @@ const Dashboard = () => {
   const startTimer = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}/start-timer`, {
+      const response = await fetch(`https://aufgabenplanung.onrender.com/api/tasks/${id}/start-timer`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -1070,7 +1071,7 @@ const Dashboard = () => {
   const stopTimer = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}/stop-timer`, {
+      const response = await fetch(`https://aufgabenplanung.onrender.com/api/tasks/${id}/stop-timer`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -1260,7 +1261,7 @@ const Dashboard = () => {
 
         {/* Stats Cards */}
         <div style={{ 
-          display: 'grid',
+          display: 'grid', 
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: '20px', 
           marginBottom: '40px'
@@ -1327,7 +1328,7 @@ const Dashboard = () => {
                   width: '48px',
                   height: '48px',
                   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  borderRadius: '12px',
+            borderRadius: '12px', 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1336,11 +1337,11 @@ const Dashboard = () => {
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
                   </svg>
-                </div>
+          </div>
               </div>
               
               {/* Progress Bar */}
-              <div style={{
+          <div style={{ 
                 width: '100%',
                 height: '6px',
                 background: 'rgba(59, 130, 246, 0.1)',
@@ -1451,7 +1452,7 @@ const Dashboard = () => {
                   width: '48px',
                   height: '48px',
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  borderRadius: '12px',
+            borderRadius: '12px', 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1460,11 +1461,11 @@ const Dashboard = () => {
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
-                </div>
+          </div>
               </div>
               
               {/* Circular Progress */}
-              <div style={{
+          <div style={{ 
                 width: '60px',
                 height: '60px',
                 borderRadius: '50%',
@@ -1479,7 +1480,7 @@ const Dashboard = () => {
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
-                  background: 'white',
+            background: 'white', 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1585,7 +1586,7 @@ const Dashboard = () => {
                   width: '48px',
                   height: '48px',
                   background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-                  borderRadius: '12px',
+            borderRadius: '12px', 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1595,12 +1596,12 @@ const Dashboard = () => {
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                   </svg>
-                </div>
+          </div>
               </div>
               
               {/* Progress Bars */}
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ 
+          <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   marginBottom: '4px',
@@ -1750,7 +1751,7 @@ const Dashboard = () => {
                   width: '50px',
                   height: '50px',
                   borderRadius: '50%',
-                  background: 'white',
+            background: 'white', 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1859,7 +1860,7 @@ const Dashboard = () => {
             <div style={{
               background: 'rgba(255, 255, 255, 0.8)',
               borderRadius: '16px',
-              padding: '24px',
+            padding: '24px', 
               border: '1px solid rgba(255, 255, 255, 0.2)',
               backdropFilter: 'blur(20px)',
               boxShadow: '0 8px 32px rgba(0,0,0,0.08)'
@@ -1877,7 +1878,7 @@ const Dashboard = () => {
                              selectedCategory === 'done' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
                              selectedCategory === 'in-progress' ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
                              'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                  borderRadius: '12px',
+            borderRadius: '12px', 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -1922,8 +1923,8 @@ const Dashboard = () => {
                      selectedCategory === 'in-progress' ? `${tasks.filter(t => t.status === 'in-progress').length} active tasks` :
                      selectedCategory === 'analytics' ? `${tasks.length} tasks for analysis` : 'Tasks'}
                   </p>
-                </div>
-              </div>
+          </div>
+        </div>
               
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {(() => {
@@ -2158,7 +2159,7 @@ const Dashboard = () => {
         )}
 
         {/* Task Modal */}
-        <TaskModal
+        <TaskModal 
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           onAddTask={addTask}
@@ -2193,32 +2194,22 @@ const Login = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password
-        })
+      const response = await authAPI.login({
+        email: email,
+        password: password
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response.data) {
         // Store user data and token
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('token', response.data.token);
         
         // Redirect to dashboard
         navigate('/dashboard');
-      } else {
-        alert(data.message || 'Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed. Please try again.');
+      alert(error.response?.data?.message || 'Login failed. Please try again.');
     }
   };
 
@@ -2385,7 +2376,7 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch('https://aufgabenplanung.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2643,17 +2634,17 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <Router>
-        <div className="App">
-          <Routes>
-            <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="*" element={isLoggedIn ? <Dashboard /> : <Login />} />
-          </Routes>
-        </div>
-      </Router>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="*" element={isLoggedIn ? <Dashboard /> : <Login />} />
+        </Routes>
+      </div>
+    </Router>
     </ErrorBoundary>
   );
 }

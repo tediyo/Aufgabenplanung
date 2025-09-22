@@ -361,18 +361,18 @@ router.delete('/bulk', auth, [
 
     // Delete each task and its associated data
     for (const task of tasks) {
-      // Delete associated notifications
+    // Delete associated notifications
       const deletedNotifications = await Notification.deleteMany({ task: task._id });
       totalNotificationsDeleted += deletedNotifications.deletedCount;
 
-      // Remove from parent task if it's a subtask
-      if (task.parentTask) {
-        await Task.findByIdAndUpdate(task.parentTask, {
-          $pull: { subtasks: task._id }
-        });
-      }
+    // Remove from parent task if it's a subtask
+    if (task.parentTask) {
+      await Task.findByIdAndUpdate(task.parentTask, {
+        $pull: { subtasks: task._id }
+      });
+    }
 
-      // Delete subtasks
+    // Delete subtasks
       const deletedSubtasks = await Task.deleteMany({ parentTask: task._id });
       totalSubtasksDeleted += deletedSubtasks.deletedCount;
     }
