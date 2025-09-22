@@ -22,7 +22,8 @@ const sendImmediateTaskCreationNotification = async (task, user) => {
     return result;
   } catch (error) {
     console.error('Error sending task creation notification:', error);
-    throw error;
+    // Don't throw error, just log it
+    return { success: false, error: error.message };
   }
 };
 
@@ -38,7 +39,8 @@ const sendImmediateTaskActionNotification = async (action, task, user) => {
     return result;
   } catch (error) {
     console.error(`Error sending task ${action} notification:`, error);
-    throw error;
+    // Don't throw error, just log it
+    return { success: false, error: error.message };
   }
 };
 
@@ -82,7 +84,8 @@ const createTaskNotifications = async (task, user) => {
     return notifications;
   } catch (error) {
     console.error('Error creating task notifications:', error);
-    throw error;
+    // Don't throw error, just log it
+    return [];
   }
 };
 

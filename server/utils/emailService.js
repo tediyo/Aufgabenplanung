@@ -643,6 +643,12 @@ const emailTemplates = {
 // Send email function
 const sendEmail = async (to, subject, html) => {
   try {
+    // Check if email is configured
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email not configured, skipping email send');
+      return { success: true, messageId: 'skipped', message: 'Email not configured' };
+    }
+
     const transporter = createTransport();
     
     const mailOptions = {
