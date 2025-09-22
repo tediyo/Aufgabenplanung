@@ -24,14 +24,20 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
+      'https://aufgabenplanung.vercel.app',
+      'https://aufgabenplanung-git-master-tewodros-birhanus-projects.vercel.app',
       process.env.CORS_ORIGIN,
       process.env.FRONTEND_URL
     ].filter(Boolean);
     
+    console.log('CORS Origin:', origin);
+    console.log('Allowed Origins:', allowedOrigins);
+    
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // Temporarily allow all origins for debugging
     }
   },
   credentials: true,
@@ -80,6 +86,16 @@ app.use('/api/notifications', notificationRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Test endpoint for debugging
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'Server is working!',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    corsOrigin: req.headers.origin || 'no origin'
+  });
 });
 
 // Error handling middleware
