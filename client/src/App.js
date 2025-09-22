@@ -2635,9 +2635,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   React.useEffect(() => {
-    console.log('App component mounted');
     const user = localStorage.getItem('user');
-    console.log('User from localStorage:', user);
     if (user) {
       setIsLoggedIn(true);
     }
