@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, LogOut, Trash2, X } from 'lucide-react';
+import { Search, LogOut, Trash2 } from 'lucide-react';
 import Logo from './Logo';
 
 const DesktopSidebar = ({ 
