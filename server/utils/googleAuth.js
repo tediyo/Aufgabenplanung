@@ -1,6 +1,6 @@
 // Google OAuth Configuration for Server
-const GOOGLE_CLIENT_ID = '718113492631-v55nut1svg9mo39ltdmcvd3s95lk2hr3.apps.googleusercontent.com';
-const GOOGLE_CLIENT_SECRET = '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';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '718113492631-v55nut1svg9mo39ltdmcvd3s95lk2hr3.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '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';
 
 // Google OAuth URLs
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';

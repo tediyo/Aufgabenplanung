@@ -1,5 +1,5 @@
 // Google OAuth Configuration
-export const GOOGLE_CLIENT_ID = '718113492631-v55nut1svg9mo39ltdmcvd3s95lk2hr3.apps.googleusercontent.com';
+export const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '718113492631-v55nut1svg9mo39ltdmcvd3s95lk2hr3.apps.googleusercontent.com';
 
 // Google OAuth Scopes
 export const GOOGLE_SCOPES = [
@@ -46,7 +46,7 @@ export const exchangeCodeForToken = async (code) => {
     },
     body: new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID,
-      client_secret: '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',
+      client_secret: process.env.REACT_APP_GOOGLE_CLIENT_SECRET || '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',
       code: code,
       grant_type: 'authorization_code',
       redirect_uri: GOOGLE_CONFIG.redirectUri,
