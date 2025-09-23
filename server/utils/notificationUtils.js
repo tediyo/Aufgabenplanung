@@ -10,26 +10,22 @@ const {
   sendMonthlyReport 
 } = require('./emailService');
 
-// Send immediate task creation notification
+// 1. 📝 TASK CREATION NOTIFICATION SERVICE
 const sendImmediateTaskCreationNotification = async (task, user) => {
   try {
-    console.log(`✅ Task created successfully: ${task.title} for user: ${user.email}`);
-    console.log(`📅 Task details:`, {
-      id: task._id,
-      title: task.title,
-      category: task.category,
-      priority: task.priority,
-      startDate: task.startDate,
-      endDate: task.endDate
-    });
+    console.log(`📝 [NOTIFICATION SERVICE 1] Task created: ${task.title} for user: ${user.email}`);
     
     // Create a notification record in database
     const notification = new Notification({
       user: user._id,
-      type: 'task_created',
+      email: user.email,
+      type: 'task-created',
       title: 'Task Created Successfully',
+      subject: `📝 New Task Created: ${task.title}`,
       message: `Your task "${task.title}" has been created and is ready to start.`,
       task: task._id,
+      scheduledFor: new Date(), // Send immediately
+      status: 'pending',
       isRead: false
     });
     
@@ -43,32 +39,44 @@ const sendImmediateTaskCreationNotification = async (task, user) => {
       if (emailResult.success) {
         console.log(`📧 ✅ Email notification sent successfully to ${user.email} for task: ${task.title}`);
         console.log(`📧 Message ID: ${emailResult.messageId}`);
+        await notification.markAsSent();
       } else {
         console.log(`📧 ❌ Email notification failed: ${emailResult.error}`);
+        await notification.markAsFailed(emailResult.error);
       }
     } catch (emailError) {
       console.log(`📧 ❌ Email notification error: ${emailError.message}`);
+      await notification.markAsFailed(emailError.message);
     }
     
-    return { success: true, message: 'Task creation logged and notification saved' };
+    return { success: true, message: 'Task creation notification sent' };
   } catch (error) {
     console.error('Error in task creation notification:', error);
     return { success: false, error: error.message };
   }
 };
 
-// Send task action notification (start/finish)
+// 2. 🚀 TASK START NOTIFICATION SERVICE
+// 3. ✅ TASK COMPLETION NOTIFICATION SERVICE
 const sendImmediateTaskActionNotification = async (action, task, user) => {
   try {
-    console.log(`📧 Sending task ${action} notification to: ${user.email}`);
+    const isStart = action === 'start';
+    const serviceNumber = isStart ? 2 : 3;
+    const serviceName = isStart ? 'TASK START' : 'TASK COMPLETION';
+    
+    console.log(`🚀 [NOTIFICATION SERVICE ${serviceNumber}] ${serviceName}: ${task.title} for user: ${user.email}`);
     
     // Create notification in database
     const notification = new Notification({
       user: user._id,
-      type: `task_${action}`,
+      email: user.email,
+      type: isStart ? 'task-start' : 'task-completed',
       title: `Task ${action === 'start' ? 'Started' : 'Completed'}`,
+      subject: `${isStart ? '🚀' : '✅'} Task ${action === 'start' ? 'Started' : 'Completed'}: ${task.title}`,
       message: `Your task "${task.title}" has been ${action === 'start' ? 'started' : 'completed'}.`,
       task: task._id,
+      scheduledFor: new Date(), // Send immediately
+      status: 'pending',
       isRead: false
     });
     
@@ -80,8 +88,10 @@ const sendImmediateTaskActionNotification = async (action, task, user) => {
     if (result.success) {
       console.log(`📧 ✅ Task ${action} email sent successfully to ${user.email} for: ${task.title}`);
       console.log(`📧 Message ID: ${result.messageId}`);
+      await notification.markAsSent();
     } else {
       console.log(`📧 ❌ Task ${action} email failed: ${result.error}`);
+      await notification.markAsFailed(result.error);
     }
     return result;
   } catch (error) {
@@ -90,41 +100,70 @@ const sendImmediateTaskActionNotification = async (action, task, user) => {
   }
 };
 
-// Create scheduled notifications for a task
+// 4. 📅 TASK DUE NOTIFICATION SERVICE
+// 5. ⏰ TASK REMINDER NOTIFICATION SERVICE
+// 6. 🚨 OVERDUE TASK NOTIFICATION SERVICE
 const createTaskNotifications = async (task, user) => {
   try {
+    console.log(`📅 [NOTIFICATION SERVICES 4-6] Creating scheduled notifications for task: ${task.title}`);
     const notifications = [];
 
-    // Start date notification (if task not started by start date)
+    // 4. Start date notification (if task not started by start date)
     if (task.notifications && task.notifications.startDate) {
       notifications.push({
         type: 'task-start-date',
         task: task._id,
         user: user._id,
         email: user.email,
-        subject: `Task Start Date: ${task.title}`,
+        title: `Task Start Date: ${task.title}`,
+        subject: `📅 Task Start Date: ${task.title}`,
         message: `Your task "${task.title}" is scheduled to start today.`,
-        scheduledFor: task.startDate
+        scheduledFor: task.startDate,
+        status: 'pending'
       });
     }
 
-    // Due date notification (if task not completed by end date)
+    // 5. Reminder notification (before due date)
+    if (task.notifications && task.notifications.reminder) {
+      const reminderDays = task.notifications.reminderDays || 1;
+      const reminderDate = new Date(task.endDate);
+      reminderDate.setDate(reminderDate.getDate() - reminderDays);
+      
+      // Only create reminder if it's in the future
+      if (reminderDate > new Date()) {
+        notifications.push({
+          type: 'task-reminder',
+          task: task._id,
+          user: user._id,
+          email: user.email,
+          title: `Task Reminder: ${task.title}`,
+          subject: `⏰ Task Reminder: ${task.title} is due soon`,
+          message: `Your task "${task.title}" is due in ${reminderDays} day(s).`,
+          scheduledFor: reminderDate,
+          status: 'pending'
+        });
+      }
+    }
+
+    // 4. Due date notification (if task not completed by end date)
     if (task.notifications && task.notifications.endDate) {
       notifications.push({
-        type: 'task-due-date',
+        type: 'task-due',
         task: task._id,
         user: user._id,
         email: user.email,
-        subject: `Task Due Today: ${task.title}`,
+        title: `Task Due Today: ${task.title}`,
+        subject: `📅 Task Due Today: ${task.title}`,
         message: `Your task "${task.title}" is due today.`,
-        scheduledFor: task.endDate
+        scheduledFor: task.endDate,
+        status: 'pending'
       });
     }
 
     // Create notifications in database
     if (notifications.length > 0) {
       await Notification.insertMany(notifications);
-      console.log(`Created ${notifications.length} scheduled notifications for task: ${task.title}`);
+      console.log(`📅 Created ${notifications.length} scheduled notifications for task: ${task.title}`);
     }
 
     return notifications;
@@ -179,13 +218,17 @@ const processPendingNotifications = async () => {
   }
 };
 
-// Check for overdue tasks and create overdue notifications
+// 6. 🚨 OVERDUE TASK NOTIFICATION SERVICE
 const checkOverdueTasks = async () => {
   try {
+    console.log(`🚨 [NOTIFICATION SERVICE 6] Checking for overdue tasks...`);
+    
     const overdueTasks = await Task.find({
       status: { $nin: ['done', 'cancelled'] },
       endDate: { $lt: new Date() }
     }).populate('user');
+
+    let overdueNotificationsCreated = 0;
 
     for (const task of overdueTasks) {
       // Check if overdue notification already exists
@@ -196,21 +239,27 @@ const checkOverdueTasks = async () => {
       });
 
       if (!existingNotification) {
+        const daysOverdue = Math.ceil((new Date() - new Date(task.endDate)) / (1000 * 60 * 60 * 24));
+        
         const notification = new Notification({
           type: 'task-overdue',
           task: task._id,
           user: task.user._id,
           email: task.user.email,
-          subject: `OVERDUE: ${task.title}`,
-          message: `Your task "${task.title}" is overdue.`,
-          scheduledFor: new Date()
+          title: `🚨 OVERDUE: ${task.title}`,
+          subject: `🚨 OVERDUE: ${task.title}`,
+          message: `Your task "${task.title}" is ${daysOverdue} day(s) overdue. Please complete it as soon as possible.`,
+          scheduledFor: new Date(),
+          status: 'pending'
         });
 
         await notification.save();
-        console.log(`Created overdue notification for task: ${task.title}`);
+        console.log(`🚨 Created overdue notification for task: ${task.title} (${daysOverdue} days overdue)`);
+        overdueNotificationsCreated++;
       }
     }
 
+    console.log(`🚨 Found ${overdueTasks.length} overdue tasks, created ${overdueNotificationsCreated} new notifications`);
     return overdueTasks.length;
   } catch (error) {
     console.error('Error checking overdue tasks:', error);
