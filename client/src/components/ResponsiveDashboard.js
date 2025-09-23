@@ -28,7 +28,12 @@ const ResponsiveDashboard = () => {
       headers['X-User-Email'] = userEmail;
     }
     
-    const response = await fetch(`http://localhost:5000/api${endpoint}`, {
+    // Use the same API URL logic as OAuth callback
+    const apiBaseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://aufgabenplanung.onrender.com/api'
+      : 'http://localhost:5000/api';
+    
+    const response = await fetch(`${apiBaseUrl}${endpoint}`, {
       ...options,
       headers
     });
@@ -77,6 +82,7 @@ const ResponsiveDashboard = () => {
         }
       };
 
+      console.log('Task data prepared:', taskData);
       
       // Use API call
       const result = await apiCall('/tasks', {
@@ -91,17 +97,22 @@ const ResponsiveDashboard = () => {
     } catch (error) {
       console.error('Error creating task:', error);
       console.error('Failed to create task:', error.message);
+      // Show user-friendly error message
+      alert(`Failed to create task: ${error.message}`);
     }
   };
 
   const loadTasks = useCallback(async () => {
     try {
+      console.log('Loading tasks from server...');
       const data = await apiCall('/tasks');
       console.log('Loaded tasks from server:', data.tasks);
       setTasks(data.tasks || []);
     } catch (error) {
       console.error('Error loading tasks:', error);
-      console.log('Using demo tasks due to error');
+      console.error('Error details:', error.message);
+      console.log('Using empty task list due to error');
+      setTasks([]);
     }
   }, []);
 
