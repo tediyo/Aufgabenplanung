@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Menu, Search, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Menu, Search, LogOut, Trash2 } from 'lucide-react';
 import Logo from './Logo';
 
 const MobileDrawer = ({ 
@@ -12,8 +12,10 @@ const MobileDrawer = ({
   filter,
   setFilter,
   searchTerm,
-  setSearchTerm 
+  setSearchTerm,
+  onDeleteTask
 }) => {
+  const [hoveredTask, setHoveredTask] = useState(null);
   const getStatusIcon = (status) => {
     switch (status) {
       case 'done': return '✅';
@@ -128,45 +130,65 @@ const MobileDrawer = ({
             {filteredTasks.map(task => (
               <div
                 key={task.id}
-                onClick={() => {
-                  onTaskSelect(task);
-                  onClose(); // Close drawer on mobile when task is selected
-                }}
+                onMouseEnter={() => setHoveredTask(task.id)}
+                onMouseLeave={() => setHoveredTask(null)}
                 className={`
-                  p-3 rounded-lg cursor-pointer transition-all duration-200 border
+                  p-3 rounded-lg cursor-pointer transition-all duration-200 border relative group
                   ${selectedTask?.id === task.id 
                     ? 'bg-blue-600 border-blue-500' 
                     : 'bg-gray-700 border-gray-600 hover:bg-gray-600'
                   }
                 `}
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base">{getStatusIcon(task.status)}</span>
-                  <span className={`
-                    text-sm font-medium truncate
-                    ${selectedTask?.id === task.id ? 'text-white' : 'text-gray-100'}
-                  `}>
-                    {task.title}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: getPriorityColor(task.priority) }}
-                  />
-                  <span className={`
-                    text-xs capitalize
+                <div 
+                  onClick={() => {
+                    onTaskSelect(task);
+                    onClose(); // Close drawer on mobile when task is selected
+                  }}
+                  className="flex-1"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-base">{getStatusIcon(task.status)}</span>
+                    <span className={`
+                      text-sm font-medium truncate
+                      ${selectedTask?.id === task.id ? 'text-white' : 'text-gray-100'}
+                    `}>
+                      {task.title}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: getPriorityColor(task.priority) }}
+                    />
+                    <span className={`
+                      text-xs capitalize
+                      ${selectedTask?.id === task.id ? 'text-gray-200' : 'text-gray-400'}
+                    `}>
+                      {task.priority} • {task.category}
+                    </span>
+                  </div>
+                  <div className={`
+                    text-xs mt-1
                     ${selectedTask?.id === task.id ? 'text-gray-200' : 'text-gray-400'}
                   `}>
-                    {task.priority} • {task.category}
-                  </span>
+                    {task.progress}% complete
+                  </div>
                 </div>
-                <div className={`
-                  text-xs mt-1
-                  ${selectedTask?.id === task.id ? 'text-gray-200' : 'text-gray-400'}
-                `}>
-                  {task.progress}% complete
-                </div>
+                
+                {/* Delete Button */}
+                {hoveredTask === task.id && onDeleteTask && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteTask(task.id);
+                    }}
+                    className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors opacity-0 group-hover:opacity-100"
+                    title="Delete task"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             ))}
           </div>

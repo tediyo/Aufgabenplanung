@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Play, Pause, CheckCircle, RotateCcw } from 'lucide-react';
+import { Plus, Play, Pause, CheckCircle, RotateCcw, Trash2 } from 'lucide-react';
 import MobileDrawer from './MobileDrawer';
 import DesktopSidebar from './DesktopSidebar';
 import ResponsiveTaskModal from './ResponsiveTaskModal';
@@ -63,6 +63,8 @@ const ResponsiveDashboard = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const addTask = (newTask) => {
@@ -88,6 +90,27 @@ const ResponsiveDashboard = () => {
         ? { ...task, actualHours: task.actualHours + 0.5 }
         : task
     ));
+  };
+
+  const deleteTask = async (id) => {
+    setIsDeleting(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setTasks(tasks.filter(task => task.id !== id));
+      
+      // If the deleted task was selected, clear selection
+      if (selectedTask && selectedTask.id === id) {
+        setSelectedTask(null);
+      }
+      
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Delete error:', error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -134,6 +157,10 @@ const ResponsiveDashboard = () => {
         setFilter={setFilter}
         searchTerm={debouncedSearchTerm}
         setSearchTerm={setSearchTerm}
+        onDeleteTask={(id) => {
+          setShowDeleteConfirm(true);
+          setSelectedTask(tasks.find(task => task.id === id));
+        }}
       />
 
       {/* Desktop Sidebar */}
@@ -149,6 +176,10 @@ const ResponsiveDashboard = () => {
         setFilter={setFilter}
         searchTerm={debouncedSearchTerm}
         setSearchTerm={setSearchTerm}
+        onDeleteTask={(id) => {
+          setShowDeleteConfirm(true);
+          setSelectedTask(tasks.find(task => task.id === id));
+        }}
       />
 
 
@@ -323,6 +354,15 @@ const ResponsiveDashboard = () => {
                       </>
                     )}
                   </button>
+                  
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all font-medium touch-target"
+                    style={{ minHeight: `${touchTargetSize}px` }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Task
+                  </button>
                 </div>
               </div>
               </div>
@@ -351,6 +391,52 @@ const ResponsiveDashboard = () => {
         onClose={() => setShowModal(false)}
         onAddTask={addTask}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl relative" style={{ 
+            background: 'linear-gradient(white, white) padding-box, linear-gradient(45deg, #ef4444, #dc2626, #b91c1c, #ffffff) border-box',
+            border: '3px solid transparent'
+          }}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Delete Task</h3>
+                  <p className="text-sm text-gray-600">This action cannot be undone</p>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-700 mb-2">Are you sure you want to delete this task?</p>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="font-medium text-gray-900">{selectedTask.title}</p>
+                  <p className="text-sm text-gray-600 mt-1">{selectedTask.description}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteTask(selectedTask.id)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Task'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
