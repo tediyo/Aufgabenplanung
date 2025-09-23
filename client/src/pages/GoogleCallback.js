@@ -11,8 +11,15 @@ const GoogleCallback = () => {
         const code = searchParams.get('code');
         const error = searchParams.get('error');
 
+        console.log('Mobile OAuth Debug:', {
+          code: code ? 'Present' : 'Missing',
+          error: error || 'None',
+          userAgent: navigator.userAgent,
+          isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        });
+
         if (error) {
-          throw new Error('Google authentication failed');
+          throw new Error(`Google authentication failed: ${error}`);
         }
 
         if (!code) {
@@ -21,13 +28,23 @@ const GoogleCallback = () => {
 
         // Send code to server for processing
         console.log('Sending code to server:', code);
-        const response = await fetch('/api/auth/google', {
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://aufgabenplanung.onrender.com/api/auth/google'
+          : 'http://localhost:5000/api/auth/google';
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ code }),
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         console.log('Server response status:', response.status);
         
@@ -55,8 +72,22 @@ const GoogleCallback = () => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userEmail', data.user.email);
 
-        // Redirect to dashboard
-        navigate('/dashboard');
+        console.log('Mobile OAuth Success:', {
+          user: user.email,
+          hasToken: !!data.token,
+          redirecting: 'to dashboard'
+        });
+
+        // Redirect to dashboard with a small delay for mobile
+        setTimeout(() => {
+          try {
+            navigate('/dashboard');
+          } catch (navError) {
+            console.error('Navigation error:', navError);
+            // Fallback: direct window location change
+            window.location.href = '/dashboard';
+          }
+        }, 500);
 
       } catch (error) {
         console.error('Google OAuth error:', error);
