@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Play, Pause, CheckCircle, RotateCcw, Trash2 } from 'lucide-react';
 import MobileDrawer from './MobileDrawer';
 import DesktopSidebar from './DesktopSidebar';
 import ResponsiveTaskModal from './ResponsiveTaskModal';
 import LazyLoadWrapper from './LazyLoadWrapper';
-import Logo from './Logo';
 import { useMobileOptimization, useDebounce } from '../hooks/useMobileOptimization';
 
 const ResponsiveDashboard = () => {
@@ -124,8 +123,6 @@ const ResponsiveDashboard = () => {
         }
       };
 
-      // Get user data from localStorage
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
       
       // Use API call
       const result = await apiCall('/tasks', {
@@ -143,7 +140,7 @@ const ResponsiveDashboard = () => {
     }
   };
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       const data = await apiCall('/tasks');
       console.log('Loaded tasks from server:', data.tasks);
@@ -152,11 +149,11 @@ const ResponsiveDashboard = () => {
       console.error('Error loading tasks:', error);
       console.log('Using demo tasks due to error');
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [loadTasks]);
 
   const updateTaskStatus = async (id, newStatus) => {
     try {
