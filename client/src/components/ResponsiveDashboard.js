@@ -41,53 +41,7 @@ const ResponsiveDashboard = () => {
     return response.json();
   };
   
-  const [tasks, setTasks] = useState([
-    { 
-      id: 1, 
-      title: 'Complete Project Proposal', 
-      description: 'Write and submit the quarterly project proposal',
-      status: 'in-progress', 
-      priority: 'high',
-      category: 'work',
-      timeFrame: 'weekly',
-      progress: 65,
-      estimatedHours: 8,
-      actualHours: 5.2,
-      startDate: '2024-01-15',
-      endDate: '2024-01-22',
-      tags: ['project', 'deadline']
-    },
-    { 
-      id: 2, 
-      title: 'Daily Workout', 
-      description: 'Complete 45-minute workout routine',
-      status: 'todo', 
-      priority: 'medium',
-      category: 'health',
-      timeFrame: 'daily',
-      progress: 0,
-      estimatedHours: 1,
-      actualHours: 0,
-      startDate: '2024-01-20',
-      endDate: '2024-01-20',
-      tags: ['fitness', 'routine']
-    },
-    { 
-      id: 3, 
-      title: 'Monthly Budget Review', 
-      description: 'Review expenses and plan next month budget',
-      status: 'done', 
-      priority: 'high',
-      category: 'finance',
-      timeFrame: 'monthly',
-      progress: 100,
-      estimatedHours: 2,
-      actualHours: 1.8,
-      startDate: '2024-01-01',
-      endDate: '2024-01-31',
-      tags: ['budget', 'planning']
-    }
-  ]);
+  const [tasks, setTasks] = useState([]);
 
   const [selectedTask, setSelectedTask] = useState(null);
   const [showModal, setShowModal] = useState(false);
