@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import ResponsiveDashboard from './components/ResponsiveDashboard';
 import NotificationModal from './components/NotificationModal';
+import Logo from './components/Logo';
 import './utils/responsiveTest'; // Import responsive test utilities
 
 // Error Boundary Component
@@ -70,7 +71,9 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">📋</div>
+          <div className="flex justify-center mb-4">
+            <Logo size="xl" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">Task Scheduler</h1>
           <p className="text-gray-600 mt-2">Complete Task Management Solution</p>
         </div>
@@ -116,6 +119,15 @@ const Login = () => {
         <p className="text-center text-sm text-gray-500 mt-6">
           Use any email and password to test the application
         </p>
+        
+        <div className="text-center mt-4">
+          <button
+            onClick={() => navigate('/register')}
+            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+          >
+            Don't have an account? Create one here
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -158,7 +170,9 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">📋</div>
+          <div className="flex justify-center mb-4">
+            <Logo size="xl" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
           <p className="text-gray-600 mt-2">Join Task Scheduler today</p>
         </div>
@@ -238,6 +252,15 @@ const Register = () => {
             Sign in here
           </button>
         </p>
+        
+        <div className="text-center mt-2">
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-500 hover:text-gray-700 font-medium text-sm"
+          >
+            ← Back to Home
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, LogOut } from 'lucide-react';
+import Logo from './Logo';
 
 const DesktopSidebar = ({ 
   tasks, 
@@ -40,8 +41,13 @@ const DesktopSidebar = ({
     <div className="hidden lg:block w-80 h-screen bg-gray-800 text-white overflow-y-auto flex-shrink-0">
       {/* Header */}
       <div className="p-6 border-b border-gray-700">
-        <h2 className="text-xl font-semibold text-white mb-2">📋 Task Manager</h2>
-        <p className="text-sm text-gray-400">Complete task management</p>
+        <div className="flex items-center gap-3 mb-3">
+          <Logo size="medium" />
+          <div>
+            <h2 className="text-xl font-semibold text-white">Task Manager</h2>
+            <p className="text-sm text-gray-400">Complete task management</p>
+          </div>
+        </div>
       </div>
 
       {/* Search */}

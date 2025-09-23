@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Menu, Search, LogOut } from 'lucide-react';
+import Logo from './Logo';
 
 const MobileDrawer = ({ 
   isOpen, 
@@ -48,6 +49,11 @@ const MobileDrawer = ({
         <Menu className="w-5 h-5" />
       </button>
 
+      {/* Mobile Logo */}
+      <div className="lg:hidden fixed top-4 right-4 z-50">
+        <Logo size="small" />
+      </div>
+
       {/* Overlay */}
       {isOpen && (
         <div 
@@ -63,9 +69,12 @@ const MobileDrawer = ({
       `}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <div>
-            <h2 className="text-lg font-semibold text-white">📋 Task Manager</h2>
-            <p className="text-sm text-gray-400">Complete task management</p>
+          <div className="flex items-center gap-3">
+            <Logo size="small" />
+            <div>
+              <h2 className="text-lg font-semibold text-white">Task Manager</h2>
+              <p className="text-sm text-gray-400">Complete task management</p>
+            </div>
           </div>
           <button
             onClick={onClose}

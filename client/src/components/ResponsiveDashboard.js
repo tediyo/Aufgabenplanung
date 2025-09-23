@@ -4,6 +4,7 @@ import MobileDrawer from './MobileDrawer';
 import DesktopSidebar from './DesktopSidebar';
 import ResponsiveTaskModal from './ResponsiveTaskModal';
 import LazyLoadWrapper from './LazyLoadWrapper';
+import Logo from './Logo';
 import { useMobileOptimization, useDebounce } from '../hooks/useMobileOptimization';
 
 const ResponsiveDashboard = () => {
@@ -127,7 +128,7 @@ const ResponsiveDashboard = () => {
         selectedTask={selectedTask}
         onLogout={() => {
           localStorage.removeItem('user');
-          window.location.reload();
+          window.location.href = '/login';
         }}
         filter={filter}
         setFilter={setFilter}
@@ -142,7 +143,7 @@ const ResponsiveDashboard = () => {
         selectedTask={selectedTask}
         onLogout={() => {
           localStorage.removeItem('user');
-          window.location.reload();
+          window.location.href = '/login';
         }}
         filter={filter}
         setFilter={setFilter}
@@ -150,16 +151,17 @@ const ResponsiveDashboard = () => {
         setSearchTerm={setSearchTerm}
       />
 
+
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto lg:mt-0 mt-16">
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 lg:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">📊 Task Dashboard</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Task Dashboard</h1>
               <p className="text-gray-600 mt-1">Complete task management and analytics</p>
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowModal(true)}
                 className="flex items-center gap-1 px-2 py-1.5 sm:gap-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-sm text-xs sm:text-sm lg:text-base"
@@ -167,6 +169,17 @@ const ResponsiveDashboard = () => {
                 <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
                 <span className="hidden sm:inline">Add New Task</span>
                 <span className="sm:hidden">Add</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  localStorage.removeItem('user');
+                  window.location.href = '/login';
+                }}
+                className="flex items-center gap-1 px-2 py-1.5 sm:gap-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium shadow-sm text-xs sm:text-sm lg:text-base"
+              >
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">Exit</span>
               </button>
             </div>
           </div>
