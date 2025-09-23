@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import { authAPI } from './utils/api';
 import ResponsiveDashboard from './components/ResponsiveDashboard';
 import NotificationModal from './components/NotificationModal';
 import './utils/responsiveTest'; // Import responsive test utilities
