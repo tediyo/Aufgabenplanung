@@ -78,13 +78,19 @@ const monthlyReportJob = cron.schedule('0 8 1 * *', async () => {
 
 // Start all cron jobs
 const start = () => {
-  console.log('Starting cron jobs...');
+  console.log('🚀 Starting cron jobs...');
   processNotificationsJob.start();
   checkOverdueJob.start();
   cleanupJob.start();
   weeklyReportJob.start();
   monthlyReportJob.start();
-  console.log('All cron jobs started');
+  console.log('✅ All cron jobs started successfully');
+  console.log('📋 Cron jobs running:');
+  console.log('   - Process notifications: Every minute');
+  console.log('   - Check overdue tasks: Every hour');
+  console.log('   - Cleanup old notifications: Daily at 2 AM');
+  console.log('   - Weekly reports: Every Monday at 9 AM');
+  console.log('   - Monthly reports: 1st of every month at 9 AM');
 };
 
 // Stop all cron jobs

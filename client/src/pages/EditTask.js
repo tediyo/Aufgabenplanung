@@ -139,7 +139,15 @@ const EditTask = () => {
 
     setSaving(true);
     try {
-      const result = await updateTask(id, formData);
+      // Convert dates to ISO8601 format for server validation
+      const updateData = {
+        ...formData,
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString()
+      };
+      
+      console.log('Sending update data:', updateData);
+      const result = await updateTask(id, updateData);
       if (result.success) {
         navigate('/tasks');
       }

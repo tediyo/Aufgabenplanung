@@ -13,16 +13,46 @@ const {
 // Send immediate task creation notification
 const sendImmediateTaskCreationNotification = async (task, user) => {
   try {
-    const result = await sendTaskCreationNotification(task, user);
-    if (result.success) {
-      console.log(`Task creation notification sent for: ${task.title}`);
-    } else {
-      console.error(`Failed to send task creation notification: ${result.error}`);
+    console.log(`✅ Task created successfully: ${task.title} for user: ${user.email}`);
+    console.log(`📅 Task details:`, {
+      id: task._id,
+      title: task.title,
+      category: task.category,
+      priority: task.priority,
+      startDate: task.startDate,
+      endDate: task.endDate
+    });
+    
+    // Create a notification record in database
+    const notification = new Notification({
+      user: user._id,
+      type: 'task_created',
+      title: 'Task Created Successfully',
+      message: `Your task "${task.title}" has been created and is ready to start.`,
+      task: task._id,
+      isRead: false
+    });
+    
+    await notification.save();
+    console.log(`📝 Notification saved to database for task: ${task.title}`);
+    
+    // Send email notification to user's email
+    try {
+      console.log(`📧 Sending email notification to: ${user.email}`);
+      const emailResult = await sendTaskCreationNotification(task, user);
+      if (emailResult.success) {
+        console.log(`📧 ✅ Email notification sent successfully to ${user.email} for task: ${task.title}`);
+        console.log(`📧 Message ID: ${emailResult.messageId}`);
+      } else {
+        console.log(`📧 ❌ Email notification failed: ${emailResult.error}`);
+      }
+    } catch (emailError) {
+      console.log(`📧 ❌ Email notification error: ${emailError.message}`);
     }
-    return result;
+    
+    return { success: true, message: 'Task creation logged and notification saved' };
   } catch (error) {
-    console.error('Error sending task creation notification:', error);
-    // Don't throw error, just log it
+    console.error('Error in task creation notification:', error);
     return { success: false, error: error.message };
   }
 };
@@ -30,16 +60,32 @@ const sendImmediateTaskCreationNotification = async (task, user) => {
 // Send task action notification (start/finish)
 const sendImmediateTaskActionNotification = async (action, task, user) => {
   try {
+    console.log(`📧 Sending task ${action} notification to: ${user.email}`);
+    
+    // Create notification in database
+    const notification = new Notification({
+      user: user._id,
+      type: `task_${action}`,
+      title: `Task ${action === 'start' ? 'Started' : 'Completed'}`,
+      message: `Your task "${task.title}" has been ${action === 'start' ? 'started' : 'completed'}.`,
+      task: task._id,
+      isRead: false
+    });
+    
+    await notification.save();
+    console.log(`📝 Task ${action} notification saved to database`);
+    
+    // Send email notification
     const result = await sendTaskActionNotification(action, task, user);
     if (result.success) {
-      console.log(`Task ${action} notification sent for: ${task.title}`);
+      console.log(`📧 ✅ Task ${action} email sent successfully to ${user.email} for: ${task.title}`);
+      console.log(`📧 Message ID: ${result.messageId}`);
     } else {
-      console.error(`Failed to send task ${action} notification: ${result.error}`);
+      console.log(`📧 ❌ Task ${action} email failed: ${result.error}`);
     }
     return result;
   } catch (error) {
     console.error(`Error sending task ${action} notification:`, error);
-    // Don't throw error, just log it
     return { success: false, error: error.message };
   }
 };

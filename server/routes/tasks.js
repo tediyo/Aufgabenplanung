@@ -190,14 +190,18 @@ router.post('/', auth, [
       parentTask
     });
 
+    console.log('💾 Saving task to database...');
     await task.save();
+    console.log('✅ Task saved successfully with ID:', task._id);
 
     // Send immediate task creation notification (non-blocking)
+    console.log('📧 Sending task creation notification...');
     sendImmediateTaskCreationNotification(task, req.user).catch(error => {
       console.error('Failed to send task creation notification:', error);
     });
 
     // Create scheduled notifications for the task (non-blocking)
+    console.log('📅 Creating scheduled notifications...');
     createTaskNotifications(task, req.user).catch(error => {
       console.error('Failed to create task notifications:', error);
     });
@@ -234,15 +238,22 @@ router.put('/:id', auth, [
   body('estimatedHours').optional().isFloat({ min: 0 }).withMessage('Estimated hours must be a positive number')
 ], async (req, res) => {
   try {
+    console.log('🔄 Updating task:', req.params.id);
+    console.log('📝 Update data:', req.body);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
     if (!task) {
+      console.log('❌ Task not found:', req.params.id);
       return res.status(404).json({ message: 'Task not found' });
     }
+    
+    console.log('✅ Found task:', task.title);
 
     // Update task fields
     const allowedUpdates = [
@@ -253,6 +264,7 @@ router.put('/:id', auth, [
 
     allowedUpdates.forEach(field => {
       if (req.body[field] !== undefined) {
+        console.log(`📝 Updating field ${field}: ${task[field]} -> ${req.body[field]}`);
         task[field] = req.body[field];
       }
     });
@@ -261,15 +273,38 @@ router.put('/:id', auth, [
     if (req.body.progress !== undefined) {
       if (req.body.progress === 100) {
         task.status = 'done';
+        console.log('🔄 Auto-updating status to done (progress = 100)');
       } else if (req.body.progress > 0) {
         task.status = 'in-progress';
+        console.log('🔄 Auto-updating status to in-progress (progress > 0)');
       }
     }
 
+    console.log('💾 Saving task to database...');
     await task.save();
+    console.log('✅ Task saved successfully');
 
-    // Update notifications based on changes
-    await updateTaskNotifications(req.params.id, req.body);
+    // Send email notification for status changes
+    if (req.body.status && req.body.status !== task.status) {
+      console.log(`📧 Task status changed to: ${req.body.status}`);
+      try {
+        if (req.body.status === 'in-progress') {
+          await sendImmediateTaskActionNotification('start', task, req.user);
+        } else if (req.body.status === 'done') {
+          await sendImmediateTaskActionNotification('finish', task, req.user);
+        }
+      } catch (error) {
+        console.error('Failed to send status change notification:', error);
+      }
+    }
+
+    // Update notifications based on changes (non-blocking)
+    try {
+      await updateTaskNotifications(req.params.id, req.body);
+      console.log('✅ Notifications updated successfully');
+    } catch (error) {
+      console.error('⚠️ Failed to update notifications (non-critical):', error);
+    }
 
     res.json({
       message: 'Task updated successfully',

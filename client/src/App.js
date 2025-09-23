@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import ResponsiveDashboard from './components/ResponsiveDashboard';
 import NotificationModal from './components/NotificationModal';
 import Logo from './components/Logo';
+import GoogleLoginButton from './components/GoogleLoginButtonReal';
+import GoogleCallback from './pages/GoogleCallback';
 import './utils/responsiveTest'; // Import responsive test utilities
 
 // Error Boundary Component
@@ -33,10 +35,10 @@ class ErrorBoundary extends React.Component {
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all"
             >
               Reload Page
-            </button>
-          </div>
-        </div>
-      );
+        </button>
+      </div>
+    </div>
+  );
     }
 
     return this.props.children;
@@ -49,6 +51,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -59,12 +62,23 @@ const Login = () => {
         // In a real app, you'd call the API here
         localStorage.setItem('user', JSON.stringify({ email, name: 'User' }));
         navigate('/dashboard');
-      } catch (error) {
+    } catch (error) {
         console.error('Login error:', error);
       } finally {
         setIsLoading(false);
       }
     }
+  };
+
+  const handleGoogleSuccess = (user) => {
+    setGoogleLoading(false);
+    navigate('/dashboard');
+  };
+
+  const handleGoogleError = (error) => {
+    setGoogleLoading(false);
+    console.error('Google login error:', error);
+    alert('Google login failed: ' + error);
   };
 
   return (
@@ -73,13 +87,33 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <Logo size="xl" />
-          </div>
+                </div>
           <h1 className="text-2xl font-bold text-gray-900">Task Scheduler</h1>
           <p className="text-gray-600 mt-2">Complete Task Management Solution</p>
         </div>
-        
+
+        {/* Google Login Button */}
+        <div className="mb-6">
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            text={googleLoading ? "Signing in with Google..." : "Continue with Google"}
+            disabled={googleLoading}
+          />
+              </div>
+              
+        {/* Divider */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+              </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            </div>
+          </div>
+
         <form onSubmit={handleLogin} className="space-y-6">
-          <div>
+                <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
             </label>
@@ -143,6 +177,7 @@ const Register = () => {
     confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -150,20 +185,31 @@ const Register = () => {
       alert('Passwords do not match');
       return;
     }
-    
+
     setIsLoading(true);
     try {
       // For demo purposes, we'll just store in localStorage
       localStorage.setItem('user', JSON.stringify({ 
-        email: formData.email, 
+          email: formData.email,
         name: formData.name 
       }));
-      navigate('/dashboard');
+        navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = (user) => {
+    setGoogleLoading(false);
+    navigate('/dashboard');
+  };
+
+  const handleGoogleError = (error) => {
+    setGoogleLoading(false);
+    console.error('Google login error:', error);
+    alert('Google login failed: ' + error);
   };
 
   return (
@@ -177,6 +223,26 @@ const Register = () => {
           <p className="text-gray-600 mt-2">Join Task Scheduler today</p>
         </div>
         
+        {/* Google Login Button */}
+        <div className="mb-6">
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            text={googleLoading ? "Signing up with Google..." : "Sign up with Google"}
+            disabled={googleLoading}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or create account with email</span>
+          </div>
+        </div>
+
         <form onSubmit={handleRegister} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -210,28 +276,28 @@ const Register = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
-            <input
+              <input
               type="password"
-              value={formData.password}
+                value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Create a password"
-              required
-            />
+                required
+              />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Confirm Password
             </label>
-            <input
+              <input
               type="password"
-              value={formData.confirmPassword}
+                value={formData.confirmPassword}
               onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Confirm your password"
-              required
-            />
+                placeholder="Confirm your password"
+                required
+              />
           </div>
           
           <button
@@ -279,18 +345,19 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <Router>
-        <div className="App">
-          <Routes>
+    <Router>
+      <div className="App">
+        <Routes>
             <Route path="/" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<ResponsiveDashboard />} />
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route path="*" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
-          </Routes>
+        </Routes>
           <NotificationModal />
-        </div>
-      </Router>
+      </div>
+    </Router>
     </ErrorBoundary>
   );
 }

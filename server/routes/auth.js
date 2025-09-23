@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
+const { exchangeCodeForToken, getGoogleUserInfo } = require('../utils/googleAuth');
 
 const router = express.Router();
 
@@ -204,6 +205,122 @@ router.post('/change-password', auth, [
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ message: 'Server error during password change' });
+  }
+});
+
+// @route   POST /api/auth/google
+// @desc    Handle Google OAuth callback
+// @access  Public
+router.post('/google', async (req, res) => {
+  try {
+    console.log('Google OAuth request received:', req.body);
+    const { code } = req.body;
+
+    if (!code) {
+      console.log('No authorization code provided');
+      return res.status(400).json({ message: 'Authorization code is required' });
+    }
+
+    console.log('Exchanging code for token...');
+    // Exchange code for token
+    const tokenData = await exchangeCodeForToken(code);
+    console.log('Token exchange successful:', !!tokenData.access_token);
+    
+    if (!tokenData.access_token) {
+      console.log('No access token received');
+      return res.status(400).json({ message: 'Failed to get access token from Google' });
+    }
+
+    console.log('Getting user info from Google...');
+    // Get user info from Google
+    const googleUser = await getGoogleUserInfo(tokenData.access_token);
+    console.log('User info received:', { email: googleUser.email, name: googleUser.name });
+    
+    if (!googleUser.email) {
+      console.log('No email in user info');
+      return res.status(400).json({ message: 'Failed to get user info from Google' });
+    }
+
+    console.log('Checking if user exists...');
+    // Use findOneAndUpdate with upsert to handle both create and update cases
+    const user = await User.findOneAndUpdate(
+      { email: googleUser.email },
+      {
+        $set: {
+          name: googleUser.name || googleUser.email.split('@')[0],
+          email: googleUser.email,
+          googleId: googleUser.id,
+          picture: googleUser.picture,
+          isGoogleUser: true
+        }
+      },
+      { 
+        upsert: true, 
+        new: true,
+        runValidators: true
+      }
+    );
+    console.log('User processed:', user._id, 'isGoogleUser:', user.isGoogleUser);
+
+    console.log('Generating JWT token...');
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    console.log('Google OAuth successful, sending response');
+    res.json({
+      message: 'Google authentication successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+        isGoogleUser: user.isGoogleUser
+      }
+    });
+
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    
+    // Handle specific MongoDB duplicate key error
+    if (error.code === 11000) {
+      console.log('Duplicate key error, trying to find existing user...');
+      try {
+        // Get user email from the request body
+        const { code } = req.body;
+        if (code) {
+          // Exchange code for token to get user info
+          const tokenData = await exchangeCodeForToken(code);
+          if (tokenData.access_token) {
+            const googleUser = await getGoogleUserInfo(tokenData.access_token);
+            if (googleUser.email) {
+              const existingUser = await User.findOne({ email: googleUser.email });
+              if (existingUser) {
+                const token = generateToken(existingUser._id);
+                return res.json({
+                  message: 'Google authentication successful (existing user)',
+                  token,
+                  user: {
+                    id: existingUser._id,
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    picture: existingUser.picture,
+                    isGoogleUser: existingUser.isGoogleUser
+                  }
+                });
+              }
+            }
+          }
+        }
+      } catch (findError) {
+        console.error('Error finding existing user:', findError);
+      }
+    }
+    
+    res.status(500).json({ 
+      message: 'Server error during Google authentication',
+      error: error.message 
+    });
   }
 });
 

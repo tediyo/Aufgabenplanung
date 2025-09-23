@@ -103,11 +103,15 @@ export const TaskProvider = ({ children }) => {
 
   const updateTask = async (id, taskData) => {
     try {
+      console.log('🔄 Updating task:', id, 'with data:', taskData);
       const response = await tasksAPI.updateTask(id, taskData);
+      console.log('✅ Update response:', response.data);
       dispatch({ type: 'UPDATE_TASK', payload: response.data.task });
       toast.success('Task updated successfully!');
       return { success: true, task: response.data.task };
     } catch (error) {
+      console.error('❌ Update error:', error);
+      console.error('❌ Error response:', error.response?.data);
       const message = error.response?.data?.message || 'Failed to update task';
       toast.error(message);
       return { success: false, error: message };

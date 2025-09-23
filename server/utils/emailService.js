@@ -2,6 +2,12 @@ const nodemailer = require('nodemailer');
 
 // Create transporter
 const createTransport = () => {
+  // Check if email credentials are configured
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('📧 Email service not configured - notifications will be logged only');
+    return null;
+  }
+
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: process.env.EMAIL_PORT || 587,

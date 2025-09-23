@@ -188,7 +188,15 @@ const CreateTask = () => {
 
     setLoading(true);
     try {
-      const result = await createTask(formData);
+      // Convert dates to ISO8601 format for server validation
+      const taskData = {
+        ...formData,
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString()
+      };
+      
+      console.log('Sending create data:', taskData);
+      const result = await createTask(taskData);
       if (result.success) {
         navigate('/tasks');
       }

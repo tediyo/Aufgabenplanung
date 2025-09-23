@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Play, Pause, CheckCircle, RotateCcw, Trash2 } from 'lucide-react';
 import MobileDrawer from './MobileDrawer';
 import DesktopSidebar from './DesktopSidebar';
@@ -67,16 +67,128 @@ const ResponsiveDashboard = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const addTask = (newTask) => {
-    setTasks([...tasks, newTask]);
+  const addTask = async (newTask) => {
+    try {
+      console.log('Creating task:', newTask);
+      
+      // Prepare task data for server
+      const taskData = {
+        title: newTask.title,
+        description: newTask.description || '',
+        category: newTask.category,
+        priority: newTask.priority,
+        timeFrame: newTask.timeFrame,
+        startDate: new Date(newTask.startDate).toISOString(),
+        endDate: new Date(newTask.endDate).toISOString(),
+        estimatedHours: newTask.estimatedHours || 1,
+        tags: newTask.tags || [],
+        isRecurring: false,
+        notifications: {
+          startDate: true,
+          endDate: true,
+          reminder: true,
+          reminderDays: 1
+        }
+      };
+
+      // Get user data from localStorage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Send to server
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
+          'X-User-Email': userData.email || 'demo@example.com'
+        },
+        body: JSON.stringify(taskData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create task');
+      }
+
+      const result = await response.json();
+      console.log('Task created successfully:', result);
+      
+      // Add to local state with server response
+      setTasks([...tasks, { ...newTask, id: result.task._id }]);
+      
+    } catch (error) {
+      console.error('Error creating task:', error);
+      alert('Failed to create task: ' + error.message);
+    }
   };
 
-  const updateTaskStatus = (id, newStatus) => {
-    setTasks(tasks.map(task => 
-      task.id === id 
-        ? { ...task, status: newStatus, progress: newStatus === 'done' ? 100 : task.progress }
-        : task
-    ));
+  const loadTasks = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      const response = await fetch('/api/tasks', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
+          'X-User-Email': userData.email || 'demo@example.com'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Loaded tasks from server:', data.tasks);
+        setTasks(data.tasks || []);
+      } else {
+        console.log('Failed to load tasks from server, using demo data');
+      }
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      console.log('Using demo tasks due to error');
+    }
+  };
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const updateTaskStatus = async (id, newStatus) => {
+    try {
+      // Make API call to update task
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          progress: newStatus === 'done' ? 100 : tasks.find(t => t._id === id)?.progress || 0
+        })
+      });
+
+      if (response.ok) {
+        const updatedTask = await response.json();
+        console.log('✅ Task updated successfully:', updatedTask);
+        
+        // Update local state with server response
+        setTasks(tasks.map(task => 
+          task._id === id 
+            ? { ...task, status: newStatus, progress: newStatus === 'done' ? 100 : task.progress }
+            : task
+        ));
+        
+        // Update selected task if it's the one being updated
+        if (selectedTask && selectedTask._id === id) {
+          setSelectedTask({ ...selectedTask, status: newStatus, progress: newStatus === 'done' ? 100 : selectedTask.progress });
+        }
+      } else {
+        console.error('❌ Failed to update task:', response.statusText);
+        alert('Failed to update task. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Error updating task:', error);
+      alert('Error updating task. Please try again.');
+    }
   };
 
   const startTimer = (id) => {
@@ -95,19 +207,33 @@ const ResponsiveDashboard = () => {
   const deleteTask = async (id) => {
     setIsDeleting(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setTasks(tasks.filter(task => task.id !== id));
-      
-      // If the deleted task was selected, clear selection
-      if (selectedTask && selectedTask.id === id) {
-        setSelectedTask(null);
+      // Make API call to delete task
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
+        }
+      });
+
+      if (response.ok) {
+        console.log('✅ Task deleted successfully');
+        
+        // Update local state
+        setTasks(tasks.filter(task => task._id !== id));
+        
+        // If the deleted task was selected, clear selection
+        if (selectedTask && selectedTask._id === id) {
+          setSelectedTask(null);
+        }
+        
+        setShowDeleteConfirm(false);
+      } else {
+        console.error('❌ Failed to delete task:', response.statusText);
+        alert('Failed to delete task. Please try again.');
       }
-      
-      setShowDeleteConfirm(false);
     } catch (error) {
-      console.error('Delete error:', error);
+      console.error('❌ Error deleting task:', error);
+      alert('Error deleting task. Please try again.');
     } finally {
       setIsDeleting(false);
     }

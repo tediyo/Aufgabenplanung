@@ -53,8 +53,14 @@ export const authAPI = {
 export const tasksAPI = {
   getTasks: (params) => api.get('/tasks', { params }),
   getTask: (id) => api.get(`/tasks/${id}`),
-  createTask: (taskData) => api.post('/tasks', taskData),
-  updateTask: (id, taskData) => api.put(`/tasks/${id}`, taskData),
+  createTask: (taskData) => {
+    console.log('📤 Creating task with data:', taskData);
+    return api.post('/tasks', taskData);
+  },
+  updateTask: (id, taskData) => {
+    console.log('📤 Updating task', id, 'with data:', taskData);
+    return api.put(`/tasks/${id}`, taskData);
+  },
   deleteTask: (id) => api.delete(`/tasks/${id}`),
   bulkDeleteTasks: (taskIds) => api.delete('/tasks/bulk', { data: { taskIds } }),
   cleanupCompletedTasks: () => api.delete('/tasks/cleanup/completed'),
