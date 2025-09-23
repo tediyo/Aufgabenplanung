@@ -12,13 +12,26 @@ const ResponsiveDashboard = () => {
   
   // API functions
   const apiCall = async (endpoint, options = {}) => {
+    // Get authentication info from localStorage
+    const token = localStorage.getItem('token');
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userEmail = userData.email || localStorage.getItem('userEmail') || 'test@example.com';
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+    
+    // Use JWT token if available, otherwise fall back to email header
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      headers['X-User-Email'] = userEmail;
+    }
+    
     const response = await fetch(`http://localhost:5000/api${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Email': 'test@example.com',
-        ...options.headers
-      },
-      ...options
+      ...options,
+      headers
     });
     
     if (!response.ok) {

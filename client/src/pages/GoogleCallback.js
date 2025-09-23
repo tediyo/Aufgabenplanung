@@ -50,8 +50,10 @@ const GoogleCallback = () => {
           isGoogleUser: data.user.isGoogleUser
         };
 
-        // Store user data
+        // Store user data and token
         localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userEmail', data.user.email);
 
         // Redirect to dashboard
         navigate('/dashboard');
