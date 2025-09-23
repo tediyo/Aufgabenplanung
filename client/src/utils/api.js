@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Development API URL for testing
-//const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 // Production API URL
-const API_BASE_URL = 'https://aufgabenplanung.onrender.com/api';
+//const API_BASE_URL = 'https://aufgabenplanung.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -17,8 +17,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    const userEmail = localStorage.getItem('userEmail') || 'test@example.com';
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Use email-based authentication for demo
+      config.headers['X-User-Email'] = userEmail;
     }
     return config;
   },
