@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { authAPI } from './utils/api';
+import ResponsiveDashboard from './components/ResponsiveDashboard';
 import NotificationModal from './components/NotificationModal';
+import './utils/responsiveTest'; // Import responsive test utilities
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -2637,11 +2639,11 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
+          <Route path="/" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="*" element={isLoggedIn ? <Dashboard /> : <Login />} />
+          <Route path="/dashboard" element={<ResponsiveDashboard />} />
+          <Route path="*" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
         </Routes>
       </div>
     </Router>
