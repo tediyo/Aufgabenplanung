@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Development API URL for testing
-//const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 // Production API URL
-const API_BASE_URL = 'https://aufgabenplanung.onrender.com/api';
+//const API_BASE_URL = 'https://aufgabenplanung.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -17,8 +17,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    const userEmail = localStorage.getItem('userEmail') || 'test@example.com';
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Use email-based authentication for demo
+      config.headers['X-User-Email'] = userEmail;
     }
     return config;
   },
@@ -53,8 +58,14 @@ export const authAPI = {
 export const tasksAPI = {
   getTasks: (params) => api.get('/tasks', { params }),
   getTask: (id) => api.get(`/tasks/${id}`),
-  createTask: (taskData) => api.post('/tasks', taskData),
-  updateTask: (id, taskData) => api.put(`/tasks/${id}`, taskData),
+  createTask: (taskData) => {
+    console.log('📤 Creating task with data:', taskData);
+    return api.post('/tasks', taskData);
+  },
+  updateTask: (id, taskData) => {
+    console.log('📤 Updating task', id, 'with data:', taskData);
+    return api.put(`/tasks/${id}`, taskData);
+  },
   deleteTask: (id) => api.delete(`/tasks/${id}`),
   bulkDeleteTasks: (taskIds) => api.delete('/tasks/bulk', { data: { taskIds } }),
   cleanupCompletedTasks: () => api.delete('/tasks/cleanup/completed'),

@@ -1,5 +1,6 @@
-import React from 'react';
-import { Search, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, LogOut, Trash2, X } from 'lucide-react';
+import Logo from './Logo';
 
 const DesktopSidebar = ({ 
   tasks, 
@@ -9,8 +10,10 @@ const DesktopSidebar = ({
   filter,
   setFilter,
   searchTerm,
-  setSearchTerm 
+  setSearchTerm,
+  onDeleteTask
 }) => {
+  const [hoveredTask, setHoveredTask] = useState(null);
   const getStatusIcon = (status) => {
     switch (status) {
       case 'done': return '✅';
@@ -40,8 +43,13 @@ const DesktopSidebar = ({
     <div className="hidden lg:block w-80 h-screen bg-gray-800 text-white overflow-y-auto flex-shrink-0">
       {/* Header */}
       <div className="p-6 border-b border-gray-700">
-        <h2 className="text-xl font-semibold text-white mb-2">📋 Task Manager</h2>
-        <p className="text-sm text-gray-400">Complete task management</p>
+        <div className="flex items-center gap-3 mb-3">
+          <Logo size="medium" />
+          <div>
+            <h2 className="text-xl font-semibold text-white">Task Manager</h2>
+            <p className="text-sm text-gray-400">Complete task management</p>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
@@ -88,42 +96,62 @@ const DesktopSidebar = ({
           {filteredTasks.map(task => (
             <div
               key={task.id}
-              onClick={() => onTaskSelect(task)}
+              onMouseEnter={() => setHoveredTask(task.id)}
+              onMouseLeave={() => setHoveredTask(null)}
               className={`
-                p-3 rounded-lg cursor-pointer transition-all duration-200 border
+                p-3 rounded-lg cursor-pointer transition-all duration-200 border relative group
                 ${selectedTask?.id === task.id 
                   ? 'bg-blue-600 border-blue-500' 
                   : 'bg-gray-700 border-gray-600 hover:bg-gray-600'
                 }
               `}
             >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-base">{getStatusIcon(task.status)}</span>
-                <span className={`
-                  text-sm font-medium truncate
-                  ${selectedTask?.id === task.id ? 'text-white' : 'text-gray-100'}
-                `}>
-                  {task.title}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: getPriorityColor(task.priority) }}
-                />
-                <span className={`
-                  text-xs capitalize
+              <div 
+                onClick={() => onTaskSelect(task)}
+                className="flex-1"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">{getStatusIcon(task.status)}</span>
+                  <span className={`
+                    text-sm font-medium truncate
+                    ${selectedTask?.id === task.id ? 'text-white' : 'text-gray-100'}
+                  `}>
+                    {task.title}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: getPriorityColor(task.priority) }}
+                  />
+                  <span className={`
+                    text-xs capitalize
+                    ${selectedTask?.id === task.id ? 'text-gray-200' : 'text-gray-400'}
+                  `}>
+                    {task.priority} • {task.category}
+                  </span>
+                </div>
+                <div className={`
+                  text-xs mt-1
                   ${selectedTask?.id === task.id ? 'text-gray-200' : 'text-gray-400'}
                 `}>
-                  {task.priority} • {task.category}
-                </span>
+                  {task.progress}% complete
+                </div>
               </div>
-              <div className={`
-                text-xs mt-1
-                ${selectedTask?.id === task.id ? 'text-gray-200' : 'text-gray-400'}
-              `}>
-                {task.progress}% complete
-              </div>
+              
+              {/* Delete Button */}
+              {hoveredTask === task.id && onDeleteTask && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteTask(task.id);
+                  }}
+                  className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors opacity-0 group-hover:opacity-100"
+                  title="Delete task"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -133,7 +161,7 @@ const DesktopSidebar = ({
       <div className="p-4 border-t border-gray-700">
         <button
           onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg hover:from-orange-600 hover:to-yellow-500 transition-all"
         >
           <LogOut className="w-4 h-4" />
           Logout

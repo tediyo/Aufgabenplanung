@@ -43,7 +43,10 @@ const ResponsiveTaskModal = ({ isOpen, onClose, onAddTask }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-white rounded-xl w-full max-w-sm sm:max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white rounded-xl w-full max-w-sm sm:max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl relative" style={{ 
+        background: 'linear-gradient(white, white) padding-box, linear-gradient(45deg, #3b82f6, #f59e0b, #fbbf24, #ffffff) border-box',
+        border: '3px solid transparent'
+      }}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900">➕ Create New Task</h2>
@@ -181,7 +184,7 @@ const ResponsiveTaskModal = ({ isOpen, onClose, onAddTask }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium text-sm sm:text-base"
+              className="flex-1 px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium text-sm sm:text-base"
             >
               ✅ Create Task
             </button>

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import ResponsiveDashboard from './components/ResponsiveDashboard';
 import NotificationModal from './components/NotificationModal';
+import Logo from './components/Logo';
+import GoogleLoginButton from './components/GoogleLoginButtonReal';
+import GoogleCallback from './pages/GoogleCallback';
 import './utils/responsiveTest'; // Import responsive test utilities
 
 // Error Boundary Component
@@ -29,13 +32,13 @@ class ErrorBoundary extends React.Component {
             <p className="text-gray-600 mb-4">We're sorry, but something unexpected happened.</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all"
             >
               Reload Page
-            </button>
-          </div>
-        </div>
-      );
+        </button>
+      </div>
+    </div>
+  );
     }
 
     return this.props.children;
@@ -48,6 +51,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -58,7 +62,7 @@ const Login = () => {
         // In a real app, you'd call the API here
         localStorage.setItem('user', JSON.stringify({ email, name: 'User' }));
         navigate('/dashboard');
-      } catch (error) {
+    } catch (error) {
         console.error('Login error:', error);
       } finally {
         setIsLoading(false);
@@ -66,17 +70,50 @@ const Login = () => {
     }
   };
 
+  const handleGoogleSuccess = (user) => {
+    setGoogleLoading(false);
+    navigate('/dashboard');
+  };
+
+  const handleGoogleError = (error) => {
+    setGoogleLoading(false);
+    console.error('Google login error:', error);
+    alert('Google login failed: ' + error);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">📋</div>
+          <div className="flex justify-center mb-4">
+            <Logo size="xl" />
+                </div>
           <h1 className="text-2xl font-bold text-gray-900">Task Scheduler</h1>
           <p className="text-gray-600 mt-2">Complete Task Management Solution</p>
         </div>
-        
+
+        {/* Google Login Button */}
+        <div className="mb-6">
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            text={googleLoading ? "Signing in with Google..." : "Continue with Google"}
+            disabled={googleLoading}
+          />
+              </div>
+              
+        {/* Divider */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+              </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            </div>
+          </div>
+
         <form onSubmit={handleLogin} className="space-y-6">
-          <div>
+                <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
             </label>
@@ -107,7 +144,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Signing in...' : '🚀 Login / Register'}
           </button>
@@ -116,6 +153,15 @@ const Login = () => {
         <p className="text-center text-sm text-gray-500 mt-6">
           Use any email and password to test the application
         </p>
+        
+        <div className="text-center mt-4">
+          <button
+            onClick={() => navigate('/register')}
+            className="text-blue-500 hover:text-orange-500 font-medium text-sm transition-colors"
+          >
+            Don't have an account? Create one here
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -131,6 +177,7 @@ const Register = () => {
     confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -138,15 +185,15 @@ const Register = () => {
       alert('Passwords do not match');
       return;
     }
-    
+
     setIsLoading(true);
     try {
       // For demo purposes, we'll just store in localStorage
       localStorage.setItem('user', JSON.stringify({ 
-        email: formData.email, 
+          email: formData.email,
         name: formData.name 
       }));
-      navigate('/dashboard');
+        navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
     } finally {
@@ -154,15 +201,48 @@ const Register = () => {
     }
   };
 
+  const handleGoogleSuccess = (user) => {
+    setGoogleLoading(false);
+    navigate('/dashboard');
+  };
+
+  const handleGoogleError = (error) => {
+    setGoogleLoading(false);
+    console.error('Google login error:', error);
+    alert('Google login failed: ' + error);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">📋</div>
+          <div className="flex justify-center mb-4">
+            <Logo size="xl" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
           <p className="text-gray-600 mt-2">Join Task Scheduler today</p>
         </div>
         
+        {/* Google Login Button */}
+        <div className="mb-6">
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            text={googleLoading ? "Signing up with Google..." : "Sign up with Google"}
+            disabled={googleLoading}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or create account with email</span>
+          </div>
+        </div>
+
         <form onSubmit={handleRegister} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -196,34 +276,34 @@ const Register = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
-            <input
+              <input
               type="password"
-              value={formData.password}
+                value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Create a password"
-              required
-            />
+                required
+              />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Confirm Password
             </label>
-            <input
+              <input
               type="password"
-              value={formData.confirmPassword}
+                value={formData.confirmPassword}
               onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Confirm your password"
-              required
-            />
+                placeholder="Confirm your password"
+                required
+              />
           </div>
           
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating Account...' : '🚀 Create Account'}
           </button>
@@ -233,11 +313,20 @@ const Register = () => {
           Already have an account?{' '}
           <button
             onClick={() => navigate('/login')}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-blue-500 hover:text-orange-500 font-medium transition-colors"
           >
             Sign in here
           </button>
         </p>
+        
+        <div className="text-center mt-2">
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-500 hover:text-gray-700 font-medium text-sm"
+          >
+            ← Back to Home
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -256,18 +345,19 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <Router>
-        <div className="App">
-          <Routes>
+    <Router>
+      <div className="App">
+        <Routes>
             <Route path="/" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<ResponsiveDashboard />} />
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route path="*" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
-          </Routes>
+        </Routes>
           <NotificationModal />
-        </div>
-      </Router>
+      </div>
+    </Router>
     </ErrorBoundary>
   );
 }

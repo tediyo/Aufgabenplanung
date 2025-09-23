@@ -4,7 +4,16 @@ const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['task-start', 'task-reminder', 'task-due', 'task-overdue', 'task-completed']
+    enum: [
+      'task-created',      // When a new task is created
+      'task-start',        // When a task is started (in-progress)
+      'task-completed',    // When a task is completed (done)
+      'task-due',          // On the task's due date
+      'task-reminder',     // Before the due date (configurable)
+      'task-overdue',      // For tasks past their due date
+      'task-start-date',   // On the task's start date
+      'task-due-date'      // On the task's due date (alternative)
+    ]
   },
   task: {
     type: mongoose.Schema.Types.ObjectId,
@@ -53,6 +62,18 @@ const notificationSchema = new mongoose.Schema({
   metadata: {
     type: Map,
     of: mongoose.Schema.Types.Mixed
+  },
+  isRead: {
+    type: Boolean,
+    default: false
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  message: {
+    type: String,
+    required: true
   }
 }, {
   timestamps: true
@@ -62,15 +83,37 @@ const notificationSchema = new mongoose.Schema({
 notificationSchema.index({ scheduledFor: 1, status: 1 });
 notificationSchema.index({ user: 1, status: 1 });
 notificationSchema.index({ task: 1 });
+notificationSchema.index({ user: 1, isRead: 1 });
 
-// Method to mark as sent
+// Static methods
+notificationSchema.statics.getPendingNotifications = function() {
+  return this.find({ 
+    status: 'pending', 
+    scheduledFor: { $lte: new Date() } 
+  }).populate('task user');
+};
+
+notificationSchema.statics.getUserNotifications = function(userId, options = {}) {
+  const { page = 1, limit = 20, status, type } = options;
+  const query = { user: userId };
+  
+  if (status) query.status = status;
+  if (type) query.type = type;
+  
+  return this.find(query)
+    .populate('task')
+    .sort({ createdAt: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit);
+};
+
+// Instance methods
 notificationSchema.methods.markAsSent = function() {
   this.status = 'sent';
   this.sentAt = new Date();
   return this.save();
 };
 
-// Method to mark as failed
 notificationSchema.methods.markAsFailed = function(errorMessage) {
   this.status = 'failed';
   this.errorMessage = errorMessage;
@@ -78,12 +121,19 @@ notificationSchema.methods.markAsFailed = function(errorMessage) {
   return this.save();
 };
 
-// Method to check if can retry
+notificationSchema.methods.markAsRead = function() {
+  this.isRead = true;
+  return this.save();
+};
+
+notificationSchema.methods.cancel = function() {
+  this.status = 'cancelled';
+  return this.save();
+};
+
 notificationSchema.methods.canRetry = function() {
   return this.retryCount < this.maxRetries && this.status === 'failed';
 };
-
-// Static method to get pending notifications
 notificationSchema.statics.getPendingNotifications = function() {
   return this.find({
     status: 'pending',

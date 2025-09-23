@@ -2,6 +2,12 @@ const nodemailer = require('nodemailer');
 
 // Create transporter
 const createTransport = () => {
+  // Check if email credentials are configured
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('📧 Email service not configured - notifications will be logged only');
+    return null;
+  }
+
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: process.env.EMAIL_PORT || 587,
@@ -637,6 +643,94 @@ const emailTemplates = {
       </body>
       </html>
     `
+  }),
+
+  'task-due': (task, user) => ({
+    subject: `📅 Task Due Today: ${task.title}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Task Due Today</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+          .task-card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 5px solid #ff6b6b; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>📅 Task Due Today!</h1>
+            <p>This task is due today - time to finish it up!</p>
+          </div>
+          <div class="content">
+            <div class="task-card">
+              <h2>${task.title}</h2>
+              <p><strong>Due Date:</strong> ${new Date(task.endDate).toLocaleDateString()}</p>
+              <p><strong>Priority:</strong> ${task.priority.toUpperCase()}</p>
+              <p><strong>Status:</strong> ${task.status.replace('-', ' ').toUpperCase()}</p>
+              <p><strong>Progress:</strong> ${task.progress || 0}%</p>
+            </div>
+            <p>This task is due today! Make sure to complete it before the end of the day.</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated notification from your Task Scheduler.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  }),
+
+  'task-overdue': (task, user) => ({
+    subject: `🚨 OVERDUE: ${task.title}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Overdue Task</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+          .task-card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 5px solid #d32f2f; }
+          .urgent { background: #ffebee; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🚨 OVERDUE TASK!</h1>
+            <p>This task is past its due date!</p>
+          </div>
+          <div class="content">
+            <div class="task-card urgent">
+              <h2>${task.title}</h2>
+              <p><strong>Was Due:</strong> ${new Date(task.endDate).toLocaleDateString()}</p>
+              <p><strong>Days Overdue:</strong> ${Math.ceil((new Date() - new Date(task.endDate)) / (1000 * 60 * 60 * 24))} days</p>
+              <p><strong>Priority:</strong> ${task.priority.toUpperCase()}</p>
+              <p><strong>Status:</strong> ${task.status.replace('-', ' ').toUpperCase()}</p>
+              <p><strong>Progress:</strong> ${task.progress}%</p>
+            </div>
+            <p><strong>This task is overdue!</strong> Please complete it as soon as possible or update the due date if needed.</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated notification from your Task Scheduler.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
   })
 };
 
@@ -706,6 +800,8 @@ const sendTaskActionNotification = async (action, task, user) => {
 // Send scheduled date notifications
 const sendScheduledDateNotification = async (dateType, task, user) => {
   const typeMap = {
+    'task-start-date': 'taskStartDate',
+    'task-due-date': 'taskDueDate',
     'start-date': 'taskStartDate',
     'due-date': 'taskDueDate'
   };

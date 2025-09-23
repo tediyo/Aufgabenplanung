@@ -1,13 +1,47 @@
-import React, { useState } from 'react';
-import { Plus, Play, Pause, CheckCircle, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Play, Pause, CheckCircle, RotateCcw, Trash2 } from 'lucide-react';
 import MobileDrawer from './MobileDrawer';
 import DesktopSidebar from './DesktopSidebar';
 import ResponsiveTaskModal from './ResponsiveTaskModal';
 import LazyLoadWrapper from './LazyLoadWrapper';
+import Logo from './Logo';
 import { useMobileOptimization, useDebounce } from '../hooks/useMobileOptimization';
 
 const ResponsiveDashboard = () => {
   const { touchTargetSize } = useMobileOptimization();
+  
+  // API functions
+  const apiCall = async (endpoint, options = {}) => {
+    // Get authentication info from localStorage
+    const token = localStorage.getItem('token');
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userEmail = userData.email || localStorage.getItem('userEmail') || 'test@example.com';
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+    
+    // Use JWT token if available, otherwise fall back to email header
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      headers['X-User-Email'] = userEmail;
+    }
+    
+    const response = await fetch(`http://localhost:5000/api${endpoint}`, {
+      ...options,
+      headers
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return response.json();
+  };
+  
   const [tasks, setTasks] = useState([
     { 
       id: 1, 
@@ -62,18 +96,97 @@ const ResponsiveDashboard = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const addTask = (newTask) => {
-    setTasks([...tasks, newTask]);
+  const addTask = async (newTask) => {
+    try {
+      console.log('Creating task:', newTask);
+      
+      // Prepare task data for server
+      const taskData = {
+        title: newTask.title,
+        description: newTask.description || '',
+        category: newTask.category,
+        priority: newTask.priority,
+        timeFrame: newTask.timeFrame,
+        startDate: new Date(newTask.startDate).toISOString(),
+        endDate: new Date(newTask.endDate).toISOString(),
+        estimatedHours: newTask.estimatedHours || 1,
+        tags: newTask.tags || [],
+        isRecurring: false,
+        notifications: {
+          startDate: true,
+          endDate: true,
+          reminder: true,
+          reminderDays: 1
+        }
+      };
+
+      // Get user data from localStorage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Use API call
+      const result = await apiCall('/tasks', {
+        method: 'POST',
+        body: JSON.stringify(taskData)
+      });
+      
+      console.log('Task created successfully:', result);
+      // Add to local state with server response
+      setTasks([...tasks, { ...newTask, id: result.task._id }]);
+      
+    } catch (error) {
+      console.error('Error creating task:', error);
+      console.error('Failed to create task:', error.message);
+    }
   };
 
-  const updateTaskStatus = (id, newStatus) => {
-    setTasks(tasks.map(task => 
-      task.id === id 
-        ? { ...task, status: newStatus, progress: newStatus === 'done' ? 100 : task.progress }
-        : task
-    ));
+  const loadTasks = async () => {
+    try {
+      const data = await apiCall('/tasks');
+      console.log('Loaded tasks from server:', data.tasks);
+      setTasks(data.tasks || []);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      console.log('Using demo tasks due to error');
+    }
+  };
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const updateTaskStatus = async (id, newStatus) => {
+    try {
+      // Use API call
+      const updateData = {
+        status: newStatus,
+        progress: newStatus === 'done' ? 100 : tasks.find(t => t._id === id)?.progress || 0
+      };
+      
+      const result = await apiCall(`/tasks/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      });
+      
+      console.log('✅ Task updated successfully:', result);
+      
+      // Update local state with server response
+      setTasks(tasks.map(task => 
+        task._id === id 
+          ? { ...task, status: newStatus, progress: newStatus === 'done' ? 100 : task.progress }
+          : task
+      ));
+      
+      // Update selected task if it's the one being updated
+      if (selectedTask && selectedTask._id === id) {
+        setSelectedTask({ ...selectedTask, status: newStatus, progress: newStatus === 'done' ? 100 : selectedTask.progress });
+      }
+    } catch (error) {
+      console.error('❌ Error updating task:', error);
+    }
   };
 
   const startTimer = (id) => {
@@ -87,6 +200,34 @@ const ResponsiveDashboard = () => {
         ? { ...task, actualHours: task.actualHours + 0.5 }
         : task
     ));
+  };
+
+  const deleteTask = async (id) => {
+    setIsDeleting(true);
+    try {
+      // Use API call
+      const result = await apiCall(`/tasks/${id}`, {
+        method: 'DELETE'
+      });
+      
+      console.log('✅ Task deleted successfully:', result);
+      
+      // Update local state
+      setTasks(tasks.filter(task => task._id !== id && task.id !== id));
+      
+      // If the deleted task was selected, clear selection
+      if (selectedTask && (selectedTask._id === id || selectedTask.id === id)) {
+        setSelectedTask(null);
+      }
+      
+      setShowDeleteConfirm(false);
+      console.log(`Task deleted successfully!`);
+    } catch (error) {
+      console.error('❌ Error deleting task:', error);
+      console.error('Task deletion failed:', error.message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -127,12 +268,16 @@ const ResponsiveDashboard = () => {
         selectedTask={selectedTask}
         onLogout={() => {
           localStorage.removeItem('user');
-          window.location.reload();
+          window.location.href = '/login';
         }}
         filter={filter}
         setFilter={setFilter}
         searchTerm={debouncedSearchTerm}
         setSearchTerm={setSearchTerm}
+        onDeleteTask={(id) => {
+          setShowDeleteConfirm(true);
+          setSelectedTask(tasks.find(task => task.id === id));
+        }}
       />
 
       {/* Desktop Sidebar */}
@@ -142,31 +287,38 @@ const ResponsiveDashboard = () => {
         selectedTask={selectedTask}
         onLogout={() => {
           localStorage.removeItem('user');
-          window.location.reload();
+          window.location.href = '/login';
         }}
         filter={filter}
         setFilter={setFilter}
         searchTerm={debouncedSearchTerm}
         setSearchTerm={setSearchTerm}
+        onDeleteTask={(id) => {
+          setShowDeleteConfirm(true);
+          setSelectedTask(tasks.find(task => task.id === id));
+        }}
       />
 
+
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto lg:mt-0 mt-16">
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 lg:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">📊 Task Dashboard</h1>
+            <div className="flex-1">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Task Dashboard</h1>
               <p className="text-gray-600 mt-1">Complete task management and analytics</p>
             </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-sm text-sm sm:text-base"
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Add New Task</span>
-              <span className="sm:hidden">Add</span>
-            </button>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-1 px-2 py-1.5 sm:gap-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium shadow-sm text-xs sm:text-sm lg:text-base"
+              >
+                <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
+                <span className="hidden sm:inline">Add New Task</span>
+                <span className="sm:hidden">Add</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -273,8 +425,8 @@ const ResponsiveDashboard = () => {
                       onClick={() => activeTimer === selectedTask.id ? stopTimer(selectedTask.id) : startTimer(selectedTask.id)}
                       className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors touch-target ${
                         activeTimer === selectedTask.id 
-                          ? 'bg-red-600 text-white hover:bg-red-700' 
-                          : 'bg-green-600 text-white hover:bg-green-700'
+                          ? 'bg-gradient-to-r from-orange-500 to-yellow-400 text-white hover:from-orange-600 hover:to-yellow-500' 
+                          : 'bg-gradient-to-r from-blue-500 to-orange-400 text-white hover:from-blue-600 hover:to-orange-500'
                       }`}
                       style={{ minHeight: `${touchTargetSize}px` }}
                     >
@@ -299,7 +451,7 @@ const ResponsiveDashboard = () => {
                       updateTaskStatus(selectedTask.id, nextStatus);
                       setSelectedTask({...selectedTask, status: nextStatus});
                     }}
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium touch-target"
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium touch-target"
                     style={{ minHeight: `${touchTargetSize}px` }}
                   >
                     {selectedTask.status === 'todo' ? (
@@ -319,6 +471,15 @@ const ResponsiveDashboard = () => {
                       </>
                     )}
                   </button>
+                  
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all font-medium touch-target"
+                    style={{ minHeight: `${touchTargetSize}px` }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Task
+                  </button>
                 </div>
               </div>
               </div>
@@ -330,9 +491,9 @@ const ResponsiveDashboard = () => {
               <p className="text-gray-600 mb-6">Choose a task from the sidebar to view details and manage it</p>
               <button
                 onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium text-sm sm:text-base"
+                className="inline-flex items-center gap-1 px-3 py-2 sm:gap-1.5 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium text-xs sm:text-sm lg:text-base"
               >
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                 <span className="hidden sm:inline">Create Your First Task</span>
                 <span className="sm:hidden">Create Task</span>
               </button>
@@ -347,6 +508,52 @@ const ResponsiveDashboard = () => {
         onClose={() => setShowModal(false)}
         onAddTask={addTask}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl relative" style={{ 
+            background: 'linear-gradient(white, white) padding-box, linear-gradient(45deg, #ef4444, #dc2626, #b91c1c, #ffffff) border-box',
+            border: '3px solid transparent'
+          }}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Delete Task</h3>
+                  <p className="text-sm text-gray-600">This action cannot be undone</p>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-700 mb-2">Are you sure you want to delete this task?</p>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="font-medium text-gray-900">{selectedTask.title}</p>
+                  <p className="text-sm text-gray-600 mt-1">{selectedTask.description}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteTask(selectedTask.id)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Task'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google OAuth</title>
+</head>
+<body>
+    <h1>Test Google OAuth</h1>
+    <button onclick="testGoogleOAuth()">Test Google OAuth</button>
+    <div id="result"></div>
+
+    <script>
+        async function testGoogleOAuth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test server connection
+                const response = await fetch('http://localhost:5000/api/test');
+                const data = await response.json();
+                resultDiv.innerHTML = `<p>Server connection: ${JSON.stringify(data)}</p>`;
+                
+                // Test Google OAuth endpoint
+                const oauthResponse = await fetch('http://localhost:5000/api/auth/google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: 'test-code' }),
+                });
+                
+                const oauthData = await oauthResponse.json();
+                resultDiv.innerHTML += `<p>Google OAuth endpoint: ${JSON.stringify(oauthData)}</p>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
