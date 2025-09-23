@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { authAPI } from './utils/api';
 import ResponsiveDashboard from './components/ResponsiveDashboard';
@@ -78,17 +78,12 @@ const Sidebar = ({ tasks, onTaskSelect, selectedTask, onLogout, onDeleteTask, fi
   };
 
   return (
-    <div style={{
-      width: '320px',
-      height: '100vh',
-      background: 'linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%)',
+    <div className="sidebar-content" style={{
+      width: '100%',
+      height: '100%',
       color: 'white',
       padding: '24px',
       overflowY: 'auto',
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      zIndex: 1000,
       boxShadow: '4px 0 20px rgba(0, 0, 0, 0.1)',
       borderRight: '1px solid rgba(255, 255, 255, 0.1)'
     }}>
@@ -887,6 +882,91 @@ const TaskModal = ({ isOpen, onClose, onAddTask }) => {
   );
 };
 
+// Mobile Drawer Component
+const MobileDrawer = ({ isOpen, onClose, children }) => {
+  return (
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div 
+          className="drawer-backdrop"
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999,
+            opacity: isOpen ? 1 : 0,
+            transition: 'opacity 0.3s ease'
+          }}
+        />
+      )}
+      
+      {/* Drawer */}
+      <div 
+        className={`drawer ${isOpen ? 'drawer-open' : ''}`}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '320px',
+          height: '100vh',
+          background: 'linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%)',
+          color: 'white',
+          zIndex: 1000,
+          transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: '2px 0 20px rgba(0, 0, 0, 0.3)',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
+        {/* Drawer Header */}
+        <div style={{
+          padding: '20px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+            Menu
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: 'none',
+              color: 'white',
+              padding: '8px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: '40px',
+              minHeight: '40px'
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        
+        {/* Drawer Content */}
+        <div style={{ padding: '0' }}>
+          {children}
+        </div>
+      </div>
+    </>
+  );
+};
+
 // Main Dashboard Component
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
@@ -894,6 +974,8 @@ const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Notification state
   const [notification, setNotification] = useState({
@@ -902,6 +984,91 @@ const Dashboard = () => {
     title: '',
     message: ''
   });
+
+  // Mobile detection and touch optimization
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    // Mobile-specific optimizations
+    if (window.innerWidth <= 1024) {
+      // Prevent zoom on input focus (iOS)
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      }
+      
+      // Add touch-friendly classes
+      document.body.classList.add('mobile-device');
+      
+      // Add swipe gesture for drawer
+      let startX = 0;
+      let startY = 0;
+      let isSwipe = false;
+      
+      const handleTouchStart = (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isSwipe = false;
+      };
+      
+      const handleTouchMove = (e) => {
+        if (!startX || !startY) return;
+        
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const diffX = startX - currentX;
+        const diffY = startY - currentY;
+        
+        // Check if it's a horizontal swipe
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+          isSwipe = true;
+          e.preventDefault();
+        }
+      };
+      
+      const handleTouchEnd = (e) => {
+        if (!startX || !startY) return;
+        
+        const endX = e.changedTouches[0].clientX;
+        const diffX = startX - endX;
+        
+        // Swipe right to open drawer (from left edge)
+        if (isSwipe && diffX < -100 && startX < 50) {
+          setSidebarOpen(true);
+        }
+        // Swipe left to close drawer
+        else if (isSwipe && diffX > 100 && sidebarOpen) {
+          setSidebarOpen(false);
+        }
+        
+        startX = 0;
+        startY = 0;
+        isSwipe = false;
+      };
+      
+      document.addEventListener('touchstart', handleTouchStart, { passive: false });
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd, { passive: false });
+      
+      return () => {
+        document.removeEventListener('touchstart', handleTouchStart);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    } else {
+      document.body.classList.remove('mobile-device');
+    }
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      document.body.classList.remove('mobile-device');
+    };
+  }, [sidebarOpen]);
 
   // Helper function to show notifications
   const showNotification = (type, title, message) => {
@@ -1126,11 +1293,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={{ 
+    <div className={`main-content ${isMobile ? 'mobile' : ''}`} style={{ 
       minHeight: '100vh', 
       background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      marginLeft: '320px', // Account for sidebar
+      marginLeft: isMobile ? '0' : '320px', // Account for sidebar
       position: 'relative'
     }}>
       <style>
@@ -1143,16 +1310,645 @@ const Dashboard = () => {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
           }
+          
+          /* Mobile Responsive Styles */
+          @media (max-width: 1024px) {
+            .main-content {
+              margin-left: 0 !important;
+              padding: 8px !important;
+              padding-top: 60px !important;
+              min-height: 100vh;
+              transition: all 0.3s ease;
+            }
+            
+            /* Mobile-specific animations */
+            @keyframes slideInFromLeft {
+              from {
+                transform: translateX(-100%);
+                opacity: 0;
+              }
+              to {
+                transform: translateX(0);
+                opacity: 1;
+              }
+            }
+            
+            @keyframes slideInFromRight {
+              from {
+                transform: translateX(100%);
+                opacity: 0;
+              }
+              to {
+                transform: translateX(0);
+                opacity: 1;
+              }
+            }
+            
+            @keyframes fadeInUp {
+              from {
+                transform: translateY(20px);
+                opacity: 0;
+              }
+              to {
+                transform: translateY(0);
+                opacity: 1;
+              }
+            }
+            
+            @keyframes bounceIn {
+              0% {
+                transform: scale(0.3);
+                opacity: 0;
+              }
+              50% {
+                transform: scale(1.05);
+              }
+              70% {
+                transform: scale(0.9);
+              }
+              100% {
+                transform: scale(1);
+                opacity: 1;
+              }
+            }
+            
+            @keyframes pulse {
+              0% {
+                transform: scale(1);
+              }
+              50% {
+                transform: scale(1.05);
+              }
+              100% {
+                transform: scale(1);
+              }
+            }
+            
+            .stats-grid {
+              grid-template-columns: repeat(2, 1fr) !important;
+              gap: 6px !important;
+              margin-bottom: 16px !important;
+            }
+            
+            .stats-card {
+              padding: 12px !important;
+              border-radius: 12px !important;
+              transition: all 0.2s ease !important;
+              cursor: pointer !important;
+              animation: fadeInUp 0.4s ease-out !important;
+            }
+            
+            .stats-card:hover {
+              transform: translateY(-4px) !important;
+              box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+            }
+            
+            .stats-card:active {
+              transform: translateY(-2px) scale(0.98) !important;
+              transition: all 0.1s ease !important;
+            }
+            
+            .header {
+              padding: 12px !important;
+              flex-direction: column !important;
+              gap: 8px !important;
+              align-items: flex-start !important;
+              margin-bottom: 16px !important;
+            }
+            
+            .mobile-menu-btn {
+              display: flex !important;
+              background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+              border: none;
+              color: white;
+              padding: 8px;
+              border-radius: 8px;
+              cursor: pointer;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+              width: 40px;
+              height: 40px;
+              touch-action: manipulation;
+              position: fixed !important;
+              top: 12px !important;
+              left: 12px !important;
+              z-index: 1001 !important;
+              transition: all 0.2s ease;
+            }
+            
+            .mobile-menu-btn:hover {
+              transform: scale(1.05);
+              box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+            }
+            
+            .mobile-menu-btn:active {
+              transform: scale(0.95);
+            }
+            
+            /* Mobile haptic feedback simulation */
+            .mobile-menu-btn:active,
+            .stats-card:active,
+            .task-card:active,
+            .btn-primary:active,
+            .btn-secondary:active {
+              animation: pulse 0.1s ease;
+            }
+            
+            /* Mobile touch ripple effect */
+            .mobile-touch-ripple {
+              position: relative;
+              overflow: hidden;
+            }
+            
+            .mobile-touch-ripple::after {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 0;
+              height: 0;
+              border-radius: 50%;
+              background: rgba(255, 255, 255, 0.3);
+              transform: translate(-50%, -50%);
+              transition: width 0.3s ease, height 0.3s ease;
+            }
+            
+            .mobile-touch-ripple:active::after {
+              width: 200px;
+              height: 200px;
+            }
+            
+            
+            .modal-content {
+              padding: 20px !important;
+              width: 95% !important;
+              max-width: none !important;
+              margin: 20px !important;
+              border-radius: 16px !important;
+            }
+            
+            .form-grid {
+              grid-template-columns: 1fr !important;
+              gap: 12px !important;
+            }
+            
+            .button-group {
+              flex-direction: column !important;
+              gap: 8px !important;
+            }
+            
+            .task-details {
+              padding: 16px !important;
+            }
+            
+            .task-actions {
+              flex-direction: column !important;
+              gap: 8px !important;
+            }
+            
+            .task-actions button {
+              width: 100% !important;
+              min-height: 44px !important;
+              touch-action: manipulation;
+            }
+            
+            /* Mobile-specific touch improvements */
+            button, input, select, textarea {
+              touch-action: manipulation;
+              -webkit-tap-highlight-color: transparent;
+            }
+            
+            /* Mobile scroll improvements */
+            .sidebar {
+              -webkit-overflow-scrolling: touch;
+              overflow-y: auto;
+            }
+            
+            /* Mobile-specific animations */
+            .mobile-menu-btn:active {
+              transform: scale(0.95);
+              transition: transform 0.1s ease;
+            }
+            
+            .stats-card:active {
+              transform: scale(0.98);
+              transition: transform 0.1s ease;
+            }
+          }
+          
+          @media (max-width: 768px) {
+            .main-content {
+              padding: 6px !important;
+              padding-top: 50px !important;
+            }
+            
+            .stats-grid {
+              grid-template-columns: 1fr !important;
+              gap: 6px !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .stats-card {
+              padding: 10px !important;
+              border-radius: 10px !important;
+            }
+            
+            .stats-card h3 {
+              font-size: 12px !important;
+              margin-bottom: 2px !important;
+              font-weight: 600 !important;
+            }
+            
+            .stats-card .number {
+              font-size: 20px !important;
+              font-weight: 700 !important;
+            }
+            
+            .header {
+              padding: 10px !important;
+              border-radius: 12px !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .header h1 {
+              font-size: 18px !important;
+              margin-bottom: 2px !important;
+              font-weight: 700 !important;
+            }
+            
+            .header p {
+              font-size: 12px !important;
+              opacity: 0.8 !important;
+            }
+            
+            .task-card {
+              padding: 12px !important;
+              border-radius: 10px !important;
+              margin-bottom: 8px !important;
+              transition: all 0.2s ease !important;
+              cursor: pointer !important;
+              animation: slideInFromRight 0.3s ease-out !important;
+              position: relative !important;
+              overflow: hidden !important;
+            }
+            
+            .task-card::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+              transition: left 0.5s ease;
+            }
+            
+            .task-card:hover::before {
+              left: 100%;
+            }
+            
+            .task-card:hover {
+              transform: translateY(-2px) !important;
+              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+            }
+            
+            .task-card:active {
+              transform: translateY(0) scale(0.98) !important;
+              transition: all 0.1s ease !important;
+            }
+            
+            .task-card h3 {
+              font-size: 14px !important;
+              margin-bottom: 4px !important;
+              transition: color 0.2s ease !important;
+              font-weight: 600 !important;
+            }
+            
+            .task-card:hover h3 {
+              color: #3b82f6 !important;
+            }
+            
+            .task-card p {
+              font-size: 12px !important;
+              line-height: 1.3 !important;
+              opacity: 0.8 !important;
+            }
+            
+            .modal-content {
+              padding: 16px !important;
+              margin: 16px !important;
+              border-radius: 16px !important;
+            }
+            
+            .notification {
+              top: 10px !important;
+              right: 10px !important;
+              left: 10px !important;
+              max-width: none !important;
+              border-radius: 12px !important;
+            }
+            
+            /* Mobile-specific button improvements */
+            .btn-primary, .btn-secondary {
+              min-height: 40px !important;
+              font-size: 14px !important;
+              font-weight: 600 !important;
+              border-radius: 8px !important;
+              transition: all 0.2s ease !important;
+              position: relative !important;
+              overflow: hidden !important;
+              animation: bounceIn 0.3s ease-out !important;
+              padding: 8px 16px !important;
+            }
+            
+            .btn-primary::before, .btn-secondary::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+              transition: left 0.5s ease;
+            }
+            
+            .btn-primary:hover::before, .btn-secondary:hover::before {
+              left: 100%;
+            }
+            
+            .btn-primary:hover, .btn-secondary:hover {
+              transform: translateY(-2px) !important;
+              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+            }
+            
+            .btn-primary:active, .btn-secondary:active {
+              transform: translateY(0) scale(0.95) !important;
+              transition: all 0.1s ease !important;
+            }
+            
+            /* Mobile-specific input improvements */
+            .input-field {
+              min-height: 40px !important;
+              font-size: 14px !important;
+              border-radius: 8px !important;
+              padding: 8px 12px !important;
+            }
+            
+            /* Mobile-specific spacing */
+            .main-content {
+              padding: 8px !important;
+            }
+            
+            /* Mobile-specific task actions */
+            .task-actions {
+              margin-top: 12px !important;
+            }
+            
+            .task-actions button {
+              min-height: 48px !important;
+              font-size: 14px !important;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .main-content {
+              padding: 4px !important;
+              padding-top: 45px !important;
+            }
+            
+            .header {
+              padding: 8px !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .header h1 {
+              font-size: 16px !important;
+            }
+            
+            .header p {
+              font-size: 11px !important;
+            }
+            
+            .stats-grid {
+              gap: 4px !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .stats-card {
+              padding: 8px !important;
+              border-radius: 8px !important;
+            }
+            
+            .stats-card h3 {
+              font-size: 10px !important;
+              margin-bottom: 1px !important;
+            }
+            
+            .stats-card .number {
+              font-size: 16px !important;
+            }
+            
+            .task-card {
+              padding: 10px !important;
+              border-radius: 8px !important;
+              margin-bottom: 6px !important;
+            }
+            
+            .task-card h3 {
+              font-size: 13px !important;
+              margin-bottom: 3px !important;
+            }
+            
+            .task-card p {
+              font-size: 11px !important;
+              line-height: 1.2 !important;
+            }
+            
+            .modal-content {
+              padding: 12px !important;
+              margin: 8px !important;
+              border-radius: 12px !important;
+            }
+            
+            .btn-primary, .btn-secondary {
+              padding: 12px 16px !important;
+              font-size: 14px !important;
+              min-height: 44px !important;
+              border-radius: 10px !important;
+            }
+            
+            .input-field {
+              padding: 12px !important;
+              font-size: 16px !important;
+              min-height: 44px !important;
+              border-radius: 10px !important;
+            }
+            
+            .mobile-menu-btn {
+              width: 36px !important;
+              height: 36px !important;
+              padding: 6px !important;
+              top: 8px !important;
+              left: 8px !important;
+            }
+            
+            .sidebar {
+              max-width: 280px !important;
+            }
+            
+            .notification {
+              top: 8px !important;
+              right: 8px !important;
+              left: 8px !important;
+              padding: 12px !important;
+              border-radius: 10px !important;
+            }
+            
+            /* Extra small mobile optimizations */
+            .form-grid {
+              gap: 8px !important;
+            }
+            
+            .button-group {
+              gap: 6px !important;
+            }
+            
+            .task-actions {
+              margin-top: 8px !important;
+              gap: 6px !important;
+            }
+            
+            .task-actions button {
+              min-height: 44px !important;
+              font-size: 13px !important;
+              padding: 10px 12px !important;
+            }
+          }
+          
+          /* Desktop sidebar styles */
+          @media (min-width: 1025px) {
+            .sidebar {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 320px;
+              height: 100vh;
+              z-index: 100;
+              background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+              box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            .sidebar-content {
+              width: 100%;
+              height: 100%;
+              overflow-y: auto;
+            }
+          }
+          
+          /* Drawer styles */
+          .drawer {
+            will-change: transform;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          
+          .drawer-backdrop {
+            will-change: opacity;
+            transition: opacity 0.3s ease;
+          }
+          
+          /* Mobile drawer animations */
+          @media (max-width: 1024px) {
+            .drawer {
+              animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .drawer-backdrop {
+              animation: fadeIn 0.3s ease;
+            }
+            
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+          }
+          
+          /* Mobile drawer optimizations */
+          @media (max-width: 1024px) {
+            .drawer {
+              width: 100%;
+              max-width: 320px;
+            }
+            
+            .drawer-backdrop {
+              backdrop-filter: blur(4px);
+            }
+            
+            /* Ensure mobile menu button is always visible and accessible */
+            .mobile-menu-btn {
+              position: fixed !important;
+              top: 20px !important;
+              left: 20px !important;
+              z-index: 1001 !important;
+              display: flex !important;
+            }
+            
+            /* Ensure no other elements overlap with the menu button */
+            .header {
+              margin-top: 0 !important;
+            }
+            
+            /* Add some breathing room for the fixed menu button */
+            .main-content > div:first-child {
+              margin-top: 0 !important;
+            }
+          }
+          
+          /* Mobile device specific styles */
+          .mobile-device {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+          }
+          
+          .mobile-device input,
+          .mobile-device textarea {
+            -webkit-user-select: text;
+            -khtml-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+          }
+          
+          /* Mobile-specific smooth scrolling */
+          .mobile-device {
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+          }
+          
+          /* Mobile-specific focus styles */
+          .mobile-device button:focus,
+          .mobile-device input:focus,
+          .mobile-device select:focus,
+          .mobile-device textarea:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+          }
         `}
       </style>
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <div className="sidebar">
       <Sidebar 
         tasks={tasks} 
         onTaskSelect={setSelectedTask}
         selectedTask={selectedTask}
-        onDeleteTask={handleDeleteTask}
-        filter={filter}
-        setFilter={setFilter}
+            onDeleteTask={handleDeleteTask}
+            filter={filter}
+            setFilter={setFilter}
         onLogout={async () => {
           try {
             // Clear local storage
@@ -1170,11 +1966,49 @@ const Dashboard = () => {
           }
         }}
       />
+        </div>
+      )}
+
+      {/* Mobile Drawer */}
+      {isMobile && (
+        <MobileDrawer 
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        >
+          <Sidebar 
+            tasks={tasks} 
+            onTaskSelect={(task) => {
+              setSelectedTask(task);
+              setSidebarOpen(false);
+            }}
+            selectedTask={selectedTask}
+            onDeleteTask={handleDeleteTask}
+            filter={filter}
+            setFilter={setFilter}
+            onLogout={async () => {
+              try {
+                // Clear local storage
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                
+                // Redirect to login page
+                window.location.href = '/login';
+              } catch (error) {
+                console.error('Logout error:', error);
+                // Even if API call fails, still clear local storage
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+              }
+            }}
+          />
+        </MobileDrawer>
+      )}
 
       {/* Main Content */}
       <div style={{ padding: '32px' }}>
         {/* Header */}
-        <div style={{ 
+        <div className="header" style={{ 
           background: 'rgba(255, 255, 255, 0.8)', 
           padding: '32px', 
           borderRadius: '20px',
@@ -1188,6 +2022,18 @@ const Dashboard = () => {
             justifyContent: 'space-between', 
             alignItems: 'center'
           }}>
+             {isMobile && (
+               <button
+                 onClick={() => setSidebarOpen(true)}
+                 className="mobile-menu-btn mobile-touch-ripple"
+               >
+                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                   <line x1="3" y1="6" x2="21" y2="6"></line>
+                   <line x1="3" y1="12" x2="21" y2="12"></line>
+                   <line x1="3" y1="18" x2="21" y2="18"></line>
+                 </svg>
+               </button>
+             )}
             <div>
               <div style={{ 
                 display: 'flex', 
@@ -1262,13 +2108,13 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div style={{ 
+        <div className="stats-grid" style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: '20px', 
           marginBottom: '40px'
         }}>
-          <div style={{ 
+          <div className={`stats-card ${isMobile ? 'mobile-touch-ripple' : ''}`} style={{ 
             background: 'rgba(255, 255, 255, 0.8)', 
             padding: '24px', 
             borderRadius: '20px', 
@@ -1289,7 +2135,7 @@ const Dashboard = () => {
           }}
           >
             {/* Background Pattern */}
-            <div style={{
+          <div style={{ 
               position: 'absolute',
               top: '-20px',
               right: '-20px',
@@ -1392,7 +2238,7 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
-          <div style={{ 
+          <div className={`stats-card ${isMobile ? 'mobile-touch-ripple' : ''}`} style={{ 
             background: 'rgba(255, 255, 255, 0.8)', 
             padding: '24px', 
             borderRadius: '20px', 
@@ -1526,7 +2372,7 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
-          <div style={{ 
+          <div className={`stats-card ${isMobile ? 'mobile-touch-ripple' : ''}`} style={{ 
             background: 'rgba(255, 255, 255, 0.8)', 
             padding: '24px', 
             borderRadius: '20px', 
@@ -1663,7 +2509,7 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
-          <div style={{ 
+          <div className={`stats-card ${isMobile ? 'mobile-touch-ripple' : ''}`} style={{ 
             background: 'rgba(255, 255, 255, 0.8)', 
             padding: '24px', 
             borderRadius: '20px', 
@@ -1725,7 +2571,7 @@ const Dashboard = () => {
                   width: '48px',
                   height: '48px',
                   background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                  borderRadius: '12px',
+            borderRadius: '12px', 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1734,11 +2580,11 @@ const Dashboard = () => {
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
-                </div>
+          </div>
               </div>
               
               {/* Donut Chart */}
-              <div style={{
+          <div style={{ 
                 width: '80px',
                 height: '80px',
                 borderRadius: '50%',
@@ -2197,8 +3043,8 @@ const Login = () => {
 
     try {
       const response = await authAPI.login({
-        email: email,
-        password: password
+          email: email,
+          password: password
       });
 
       if (response.data) {
