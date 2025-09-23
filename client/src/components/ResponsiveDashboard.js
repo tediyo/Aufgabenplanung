@@ -161,25 +161,14 @@ const ResponsiveDashboard = () => {
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Task Dashboard</h1>
               <p className="text-gray-600 mt-1">Complete task management and analytics</p>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end">
               <button
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-1 px-2 py-1.5 sm:gap-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-sm text-xs sm:text-sm lg:text-base"
+                className="flex items-center gap-1 px-2 py-1.5 sm:gap-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium shadow-sm text-xs sm:text-sm lg:text-base"
               >
                 <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
                 <span className="hidden sm:inline">Add New Task</span>
                 <span className="sm:hidden">Add</span>
-              </button>
-              
-              <button
-                onClick={() => {
-                  localStorage.removeItem('user');
-                  window.location.href = '/login';
-                }}
-                className="flex items-center gap-1 px-2 py-1.5 sm:gap-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium shadow-sm text-xs sm:text-sm lg:text-base"
-              >
-                <span className="hidden sm:inline">Logout</span>
-                <span className="sm:hidden">Exit</span>
               </button>
             </div>
           </div>
@@ -288,8 +277,8 @@ const ResponsiveDashboard = () => {
                       onClick={() => activeTimer === selectedTask.id ? stopTimer(selectedTask.id) : startTimer(selectedTask.id)}
                       className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors touch-target ${
                         activeTimer === selectedTask.id 
-                          ? 'bg-red-600 text-white hover:bg-red-700' 
-                          : 'bg-green-600 text-white hover:bg-green-700'
+                          ? 'bg-gradient-to-r from-orange-500 to-yellow-400 text-white hover:from-orange-600 hover:to-yellow-500' 
+                          : 'bg-gradient-to-r from-blue-500 to-orange-400 text-white hover:from-blue-600 hover:to-orange-500'
                       }`}
                       style={{ minHeight: `${touchTargetSize}px` }}
                     >
@@ -314,7 +303,7 @@ const ResponsiveDashboard = () => {
                       updateTaskStatus(selectedTask.id, nextStatus);
                       setSelectedTask({...selectedTask, status: nextStatus});
                     }}
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium touch-target"
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium touch-target"
                     style={{ minHeight: `${touchTargetSize}px` }}
                   >
                     {selectedTask.status === 'todo' ? (
@@ -345,7 +334,7 @@ const ResponsiveDashboard = () => {
               <p className="text-gray-600 mb-6">Choose a task from the sidebar to view details and manage it</p>
               <button
                 onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-1 px-3 py-2 sm:gap-1.5 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium text-xs sm:text-sm lg:text-base"
+                className="inline-flex items-center gap-1 px-3 py-2 sm:gap-1.5 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium text-xs sm:text-sm lg:text-base"
               >
                 <Plus className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                 <span className="hidden sm:inline">Create Your First Task</span>

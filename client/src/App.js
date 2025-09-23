@@ -30,7 +30,7 @@ class ErrorBoundary extends React.Component {
             <p className="text-gray-600 mb-4">We're sorry, but something unexpected happened.</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all"
             >
               Reload Page
             </button>
@@ -68,7 +68,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -110,7 +110,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Signing in...' : '🚀 Login / Register'}
           </button>
@@ -123,7 +123,7 @@ const Login = () => {
         <div className="text-center mt-4">
           <button
             onClick={() => navigate('/register')}
-            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            className="text-blue-500 hover:text-orange-500 font-medium text-sm transition-colors"
           >
             Don't have an account? Create one here
           </button>
@@ -167,7 +167,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -237,7 +237,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating Account...' : '🚀 Create Account'}
           </button>
@@ -247,7 +247,7 @@ const Register = () => {
           Already have an account?{' '}
           <button
             onClick={() => navigate('/login')}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-blue-500 hover:text-orange-500 font-medium transition-colors"
           >
             Sign in here
           </button>

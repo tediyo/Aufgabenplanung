@@ -139,7 +139,7 @@ const DesktopSidebar = ({
       <div className="p-4 border-t border-gray-700">
         <button
           onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg hover:from-orange-600 hover:to-yellow-500 transition-all"
         >
           <LogOut className="w-4 h-4" />
           Logout

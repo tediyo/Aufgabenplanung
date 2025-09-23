@@ -31,9 +31,9 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'done':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-yellow-500" />;
       case 'in-progress':
-        return <Circle className="h-4 w-4 text-yellow-500" />;
+        return <Circle className="h-4 w-4 text-orange-500" />;
       case 'cancelled':
         return <AlertCircle className="h-4 w-4 text-gray-500" />;
       default:
@@ -323,7 +323,7 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-blue-500 to-orange-400 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${task.progress}%` }}
               ></div>
             </div>
@@ -337,8 +337,8 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
                 onClick={handleTimerToggle}
                 className={`p-2 rounded-full ${
                   isTimerRunning 
-                    ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                    : 'bg-green-100 text-green-600 hover:bg-green-200'
+                    ? 'bg-orange-100 text-orange-600 hover:bg-orange-200' 
+                    : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
                 } transition-colors duration-200`}
                 title={isTimerRunning ? 'Stop timer' : 'Start timer'}
               >
@@ -354,7 +354,7 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
           <div className="flex items-center space-x-2">
             <Link
               to={`/tasks/${task._id}/edit`}
-              className="text-primary-600 hover:text-primary-800 text-xs sm:text-sm font-medium"
+              className="text-blue-500 hover:text-orange-500 text-xs sm:text-sm font-medium transition-colors"
             >
               Edit
             </Link>
