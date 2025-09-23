@@ -28,31 +28,54 @@ const GoogleCallback = () => {
 
         // Send code to server for processing
         console.log('Sending code to server:', code);
-        const apiUrl = process.env.NODE_ENV === 'production' 
-          ? 'https://aufgabenplanung.onrender.com/api/auth/google'
-          : 'http://localhost:5000/api/auth/google';
         
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ code }),
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
+        // Try multiple API endpoints for production
+        const apiUrls = process.env.NODE_ENV === 'production' 
+          ? [
+              'https://aufgabenplanung.onrender.com/api/auth/google',
+              'https://aufgabenplanung-server.onrender.com/api/auth/google',
+              'https://aufgabenplanung-backend.onrender.com/api/auth/google'
+            ]
+          : ['http://localhost:5000/api/auth/google'];
+        
+        let response;
+        let lastError;
+        
+        for (const apiUrl of apiUrls) {
+          try {
+            console.log('Trying API URL:', apiUrl);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            
+            response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ code }),
+              signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+              console.log('Success with API URL:', apiUrl);
+              break;
+            } else {
+              console.log(`API URL ${apiUrl} failed with status:`, response.status);
+            }
+          } catch (error) {
+            console.log(`API URL ${apiUrl} failed with error:`, error.message);
+            lastError = error;
+            continue;
+          }
+        }
+        
+        if (!response || !response.ok) {
+          throw new Error(`All API endpoints failed. Last error: ${lastError?.message || 'Unknown error'}`);
+        }
 
         console.log('Server response status:', response.status);
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Server error:', errorData);
-          throw new Error(errorData.message || 'Failed to authenticate with Google');
-        }
 
         const data = await response.json();
         console.log('Server response data:', data);
