@@ -15,9 +15,11 @@ import { reportsAPI } from '../utils/api';
 import DashboardChart from '../components/DashboardChart';
 import TaskCard from '../components/TaskCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import useResponsive from '../hooks/useResponsive';
 
 const Dashboard = () => {
   const { tasks, loading } = useTasks();
+  const { isMobile, isTablet, getGridCols, getCardPadding, getTextSize } = useResponsive();
   const [dashboardData, setDashboardData] = useState(null);
   const [chartData, setChartData] = useState(null);
   const [loadingData, setLoadingData] = useState(true);
@@ -92,105 +94,69 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="md:flex md:items-center md:justify-between">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-            Dashboard
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Welcome back! Here's what's happening with your tasks.
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">Welcome Back 👋</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Here's what's happening with your tasks.
           </p>
         </div>
-        <div className="mt-4 flex md:mt-0 md:ml-4">
-          <Link
-            to="/tasks/create"
-            className="btn btn-primary inline-flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Task
-          </Link>
-        </div>
+        <Link
+          to="/tasks/create"
+          className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New Task
+        </Link>
       </div>
 
       {/* Stats Overview */}
       {dashboardData && (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CheckSquare className="h-6 w-6 text-gray-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Total Tasks
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {dashboardData.overview.totalTasks}
-                    </dd>
-                  </dl>
-                </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="p-6 bg-white rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CheckSquare className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Tasks</p>
+                <p className="text-2xl font-semibold text-gray-900">{dashboardData.overview.totalTasks}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Target className="h-6 w-6 text-green-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Completed
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {dashboardData.overview.completedTasks}
-                    </dd>
-                  </dl>
-                </div>
+          <div className="p-6 bg-white rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Target className="h-8 w-8 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Completed</p>
+                <p className="text-2xl font-semibold text-gray-900">{dashboardData.overview.completedTasks}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Clock className="h-6 w-6 text-yellow-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      In Progress
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {dashboardData.overview.inProgressTasks}
-                    </dd>
-                  </dl>
-                </div>
+          <div className="p-6 bg-white rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Clock className="h-8 w-8 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">In Progress</p>
+                <p className="text-2xl font-semibold text-gray-900">{dashboardData.overview.inProgressTasks}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <AlertTriangle className="h-6 w-6 text-red-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Overdue
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {dashboardData.overview.overdueTasks}
-                    </dd>
-                  </dl>
-                </div>
+          <div className="p-6 bg-white rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-8 w-8 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Overdue</p>
+                <p className="text-2xl font-semibold text-gray-900">{dashboardData.overview.overdueTasks}</p>
               </div>
             </div>
           </div>
@@ -199,75 +165,71 @@ const Dashboard = () => {
 
       {/* Charts Row */}
       {chartData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Tasks by Status</h3>
-            <DashboardChart
-              type="doughnut"
-              data={chartData.statusDistribution}
-              height={300}
-            />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks by Status</h3>
+            <div className="h-64">
+              <DashboardChart
+                type="doughnut"
+                data={chartData.statusDistribution}
+                height={256}
+              />
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Tasks by Category</h3>
-            <DashboardChart
-              type="bar"
-              data={chartData.categoryDistribution}
-              height={300}
-            />
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks by Category</h3>
+            <div className="h-64">
+              <DashboardChart
+                type="bar"
+                data={chartData.categoryDistribution}
+                height={256}
+              />
+            </div>
           </div>
         </div>
       )}
 
       {/* Recent Tasks */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-              Recent Tasks
-            </h3>
-            <div className="space-y-3">
-              {getRecentTasks().length > 0 ? (
-                getRecentTasks().map((task) => (
-                  <TaskCard key={task._id} task={task} compact />
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">No recent tasks</p>
-              )}
-            </div>
-            <div className="mt-4">
-              <Link
-                to="/tasks"
-                className="text-sm font-medium text-primary-600 hover:text-primary-500"
-              >
-                View all tasks →
-              </Link>
-            </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="p-6 bg-white rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Tasks</h3>
+          <div className="space-y-3">
+            {getRecentTasks().length > 0 ? (
+              getRecentTasks().map((task) => (
+                <TaskCard key={task._id} task={task} compact />
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-4">No recent tasks</p>
+            )}
+          </div>
+          <div className="mt-4">
+            <Link
+              to="/tasks"
+              className="text-sm font-medium text-primary-600 hover:text-primary-500"
+            >
+              View all tasks →
+            </Link>
           </div>
         </div>
 
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-              Upcoming Tasks
-            </h3>
-            <div className="space-y-3">
-              {getUpcomingTasks().length > 0 ? (
-                getUpcomingTasks().map((task) => (
-                  <TaskCard key={task._id} task={task} compact />
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">No upcoming tasks</p>
-              )}
-            </div>
-            <div className="mt-4">
-              <Link
-                to="/tasks/create"
-                className="text-sm font-medium text-primary-600 hover:text-primary-500"
-              >
-                Create new task →
-              </Link>
-            </div>
+        <div className="p-6 bg-white rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Tasks</h3>
+          <div className="space-y-3">
+            {getUpcomingTasks().length > 0 ? (
+              getUpcomingTasks().map((task) => (
+                <TaskCard key={task._id} task={task} compact />
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-4">No upcoming tasks</p>
+            )}
+          </div>
+          <div className="mt-4">
+            <Link
+              to="/tasks/create"
+              className="text-sm font-medium text-primary-600 hover:text-primary-500"
+            >
+              Create new task →
+            </Link>
           </div>
         </div>
       </div>

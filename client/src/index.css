@@ -17,6 +17,13 @@
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
   
+  /* Mobile-specific button improvements */
+  @media (max-width: 640px) {
+    .btn {
+      @apply px-3 py-2 text-sm;
+    }
+  }
+  
   .btn-primary {
     @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
   }
@@ -34,11 +41,18 @@
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6;
   }
   
   .input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  }
+  
+  /* Mobile input improvements */
+  @media (max-width: 640px) {
+    .input {
+      @apply text-base; /* Prevents zoom on iOS */
+    }
   }
   
   .select {
@@ -122,6 +136,56 @@
   
   .bg-gradient-primary {
     @apply bg-gradient-to-r from-primary-600 to-purple-600;
+  }
+  
+  /* Mobile-specific utilities */
+  .mobile-padding {
+    @apply px-3 sm:px-4 lg:px-8;
+  }
+  
+  .mobile-text {
+    @apply text-sm sm:text-base;
+  }
+  
+  .mobile-heading {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  /* Touch-friendly sizing */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Prevent text selection on mobile */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Ensure sidebar appears above all content */
+  .sidebar-overlay {
+    z-index: 99999 !important;
+    position: fixed !important;
+  }
+  
+  /* Ensure backdrop appears above content but below sidebar */
+  .sidebar-backdrop {
+    z-index: 99998 !important;
+    position: fixed !important;
+  }
+  
+  /* Ensure dashboard content stays below sidebar */
+  .dashboard-content {
+    z-index: 1 !important;
+    position: relative !important;
+  }
+  
+  /* Ensure all cards stay below sidebar */
+  .card, .bg-white {
+    z-index: 1 !important;
+    position: relative !important;
   }
 }
 
