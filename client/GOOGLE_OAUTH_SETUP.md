@@ -61,8 +61,10 @@ npm start
 
 ## 🎯 **Your Credentials**
 
-- **Client ID**: `718113492631-v55nut1svg9mo39ltdmcvd3s95lk2hr3.apps.googleusercontent.com`
-- **Client Secret**: `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`
+- **Client ID**: Set in environment variable `REACT_APP_GOOGLE_CLIENT_ID`
+- **Client Secret**: Set in environment variable `REACT_APP_GOOGLE_CLIENT_SECRET`
+
+See `ENVIRONMENT_SETUP.md` for detailed setup instructions.
 
 ## 🚨 **Important Notes**
 
