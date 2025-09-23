@@ -5,40 +5,23 @@ import DesktopSidebar from './DesktopSidebar';
 import ResponsiveTaskModal from './ResponsiveTaskModal';
 import LazyLoadWrapper from './LazyLoadWrapper';
 import { useMobileOptimization, useDebounce } from '../hooks/useMobileOptimization';
+import { tasksAPI } from '../utils/api';
 
 const ResponsiveDashboard = () => {
   const { touchTargetSize } = useMobileOptimization();
   
-  // API functions
-  const apiCall = async (endpoint, options = {}) => {
-    // Get authentication info from localStorage
+  // Debug authentication info
+  const debugAuth = () => {
     const token = localStorage.getItem('token');
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     const userEmail = userData.email || localStorage.getItem('userEmail') || 'test@example.com';
     
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers
-    };
-    
-    // Use JWT token if available, otherwise fall back to email header
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    } else {
-      headers['X-User-Email'] = userEmail;
-    }
-    
-    const response = await fetch(`http://localhost:5000/api${endpoint}`, {
-      ...options,
-      headers
+    console.log('Auth Debug:', {
+      hasToken: !!token,
+      token: token ? token.substring(0, 20) + '...' : 'none',
+      userEmail: userEmail,
+      userData: userData
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    return response.json();
   };
   
   const [tasks, setTasks] = useState([]);
@@ -55,6 +38,7 @@ const ResponsiveDashboard = () => {
 
   const addTask = async (newTask) => {
     try {
+      debugAuth();
       console.log('Creating task:', newTask);
       
       // Prepare task data for server
@@ -77,31 +61,35 @@ const ResponsiveDashboard = () => {
         }
       };
 
+      console.log('Task data prepared:', taskData);
       
-      // Use API call
-      const result = await apiCall('/tasks', {
-        method: 'POST',
-        body: JSON.stringify(taskData)
-      });
+      // Use proper API call
+      const result = await tasksAPI.createTask(taskData);
       
       console.log('Task created successfully:', result);
       // Add to local state with server response
-      setTasks([...tasks, { ...newTask, id: result.task._id }]);
+      setTasks([...tasks, { ...newTask, id: result.data.task._id }]);
       
     } catch (error) {
       console.error('Error creating task:', error);
       console.error('Failed to create task:', error.message);
+      // Show user-friendly error message
+      alert(`Failed to create task: ${error.message}`);
     }
   };
 
   const loadTasks = useCallback(async () => {
     try {
-      const data = await apiCall('/tasks');
-      console.log('Loaded tasks from server:', data.tasks);
-      setTasks(data.tasks || []);
+      debugAuth();
+      console.log('Loading tasks from server...');
+      const response = await tasksAPI.getTasks();
+      console.log('Loaded tasks from server:', response.data.tasks);
+      setTasks(response.data.tasks || []);
     } catch (error) {
       console.error('Error loading tasks:', error);
-      console.log('Using demo tasks due to error');
+      console.error('Error details:', error.message);
+      console.log('Using empty task list due to error');
+      setTasks([]);
     }
   }, []);
 
@@ -111,16 +99,14 @@ const ResponsiveDashboard = () => {
 
   const updateTaskStatus = async (id, newStatus) => {
     try {
+      debugAuth();
       // Use API call
       const updateData = {
         status: newStatus,
         progress: newStatus === 'done' ? 100 : tasks.find(t => t._id === id)?.progress || 0
       };
       
-      const result = await apiCall(`/tasks/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(updateData)
-      });
+      const result = await tasksAPI.updateTask(id, updateData);
       
       console.log('✅ Task updated successfully:', result);
       
@@ -156,10 +142,9 @@ const ResponsiveDashboard = () => {
   const deleteTask = async (id) => {
     setIsDeleting(true);
     try {
+      debugAuth();
       // Use API call
-      const result = await apiCall(`/tasks/${id}`, {
-        method: 'DELETE'
-      });
+      const result = await tasksAPI.deleteTask(id);
       
       console.log('✅ Task deleted successfully:', result);
       
