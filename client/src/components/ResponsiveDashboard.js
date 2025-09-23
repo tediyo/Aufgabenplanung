@@ -7,7 +7,7 @@ import LazyLoadWrapper from './LazyLoadWrapper';
 import { useMobileOptimization, useDebounce } from '../hooks/useMobileOptimization';
 
 const ResponsiveDashboard = () => {
-  const { isMobile, isTouchDevice, shouldLazyLoad, touchTargetSize } = useMobileOptimization();
+  const { touchTargetSize } = useMobileOptimization();
   const [tasks, setTasks] = useState([
     { 
       id: 1, 

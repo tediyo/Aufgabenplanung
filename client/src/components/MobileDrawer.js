@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Menu, Search, Filter, LogOut } from 'lucide-react';
+import { X, Menu, Search, LogOut } from 'lucide-react';
 
 const MobileDrawer = ({ 
   isOpen, 
