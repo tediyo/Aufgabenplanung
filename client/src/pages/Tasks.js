@@ -18,6 +18,7 @@ import TaskCard from '../components/TaskCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TaskFilters from '../components/TaskFilters';
 import DeleteManager from '../components/DeleteManager';
+import useResponsive from '../hooks/useResponsive';
 
 const Tasks = () => {
   const { 
@@ -32,6 +33,7 @@ const Tasks = () => {
     cleanupCompletedTasks,
     cleanupOldTasks
   } = useTasks();
+  const { isMobile, isTablet, getGridCols, getCardPadding, getTextSize } = useResponsive();
   
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
@@ -119,33 +121,31 @@ const Tasks = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="md:flex md:items-center md:justify-between">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-            Tasks
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">Tasks</h2>
+          <p className="mt-1 text-sm text-gray-600">
             Manage and track your tasks
           </p>
         </div>
-        <div className="mt-4 flex space-x-3 md:mt-0 md:ml-4">
+        <div className="flex space-x-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="btn btn-secondary inline-flex items-center"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filters
           </button>
           <button
             onClick={() => setShowDeleteManager(true)}
-            className="btn btn-outline inline-flex items-center text-red-600 border-red-300 hover:bg-red-50"
+            className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            Delete Tasks
+            Delete
           </button>
           <Link
             to="/tasks/create"
-            className="btn btn-primary inline-flex items-center"
+            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700"
           >
             <Plus className="h-4 w-4 mr-2" />
             New Task
@@ -154,78 +154,73 @@ const Tasks = () => {
       </div>
 
       {/* Status Overview */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">{statusCounts.total}</span>
-                </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="p-6 bg-white rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 text-sm font-bold">{statusCounts.total}</span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Total</p>
-              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total</p>
+              <p className="text-2xl font-semibold text-gray-900">{statusCounts.total}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 text-sm font-medium">{statusCounts.todo}</span>
-                </div>
+        <div className="p-6 bg-white rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 text-sm font-bold">{statusCounts.todo}</span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">To Do</p>
-              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">To Do</p>
+              <p className="text-2xl font-semibold text-gray-900">{statusCounts.todo}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-600 text-sm font-medium">{statusCounts.inProgress}</span>
-                </div>
+        <div className="p-6 bg-white rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <span className="text-yellow-600 text-sm font-bold">{statusCounts.inProgress}</span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">In Progress</p>
-              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">In Progress</p>
+              <p className="text-2xl font-semibold text-gray-900">{statusCounts.inProgress}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-sm font-medium">{statusCounts.done}</span>
-                </div>
+        <div className="p-6 bg-white rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <span className="text-green-600 text-sm font-bold">{statusCounts.done}</span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Done</p>
-              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Done</p>
+              <p className="text-2xl font-semibold text-gray-900">{statusCounts.done}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                  <span className="text-gray-600 text-sm font-medium">{statusCounts.cancelled}</span>
-                </div>
+        <div className="p-6 bg-white rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                <span className="text-gray-600 text-sm font-bold">{statusCounts.cancelled}</span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Cancelled</p>
-              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Cancelled</p>
+              <p className="text-2xl font-semibold text-gray-900">{statusCounts.cancelled}</p>
             </div>
           </div>
         </div>
@@ -244,41 +239,41 @@ const Tasks = () => {
 
       {/* Toolbar */}
       <div className="bg-white shadow rounded-lg p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-1">
               <Search className="h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search tasks..."
-                className="input w-64"
+                className="input w-full lg:w-64"
                 value={filters.search}
                 onChange={(e) => handleSearch(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Sort by:</span>
+          <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-4">
+            <div className="flex items-center space-x-2 overflow-x-auto">
+              <span className="text-sm text-gray-500 whitespace-nowrap">Sort by:</span>
               <button
                 onClick={() => handleSort('title')}
-                className="flex items-center space-x-1 px-3 py-1 text-sm border rounded-md hover:bg-gray-50"
+                className="flex items-center space-x-1 px-2 py-1 text-xs sm:text-sm border rounded-md hover:bg-gray-50 whitespace-nowrap"
               >
                 <span>Title</span>
                 {getSortIcon('title')}
               </button>
               <button
                 onClick={() => handleSort('startDate')}
-                className="flex items-center space-x-1 px-3 py-1 text-sm border rounded-md hover:bg-gray-50"
+                className="flex items-center space-x-1 px-2 py-1 text-xs sm:text-sm border rounded-md hover:bg-gray-50 whitespace-nowrap"
               >
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Date</span>
                 {getSortIcon('startDate')}
               </button>
               <button
                 onClick={() => handleSort('priority')}
-                className="flex items-center space-x-1 px-3 py-1 text-sm border rounded-md hover:bg-gray-50"
+                className="flex items-center space-x-1 px-2 py-1 text-xs sm:text-sm border rounded-md hover:bg-gray-50 whitespace-nowrap"
               >
                 <span>Priority</span>
                 {getSortIcon('priority')}
@@ -348,7 +343,7 @@ const Tasks = () => {
       {tasks.length > 0 ? (
         <div className={
           viewMode === 'grid' 
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+            ? 'grid gap-4 md:grid-cols-2 lg:grid-cols-3' 
             : 'space-y-4'
         }>
           {tasks.map((task) => (

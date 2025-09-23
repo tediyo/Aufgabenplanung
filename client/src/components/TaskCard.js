@@ -255,11 +255,11 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
       isOverdue() ? 'border-l-4 border-l-red-500' : 
       isDueSoon() ? 'border-l-4 border-l-yellow-500' : ''
     }`}>
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 mb-2">
             {getStatusIcon(task.status)}
-            <h3 className="text-lg font-medium text-gray-900 truncate">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 truncate">
               {task.title}
             </h3>
           </div>
@@ -282,21 +282,21 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm text-gray-500">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
             <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Start: {formatDate(task.startDate)}</span>
             </div>
             <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>End: {formatDate(task.endDate)}</span>
             </div>
             <div className="flex items-center space-x-1">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Est: {task.estimatedHours}h</span>
             </div>
             <div className="flex items-center space-x-1">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Actual: {task.actualHours}h</span>
             </div>
           </div>
@@ -330,29 +330,31 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
           </div>
         </div>
 
-        <div className="flex flex-col items-end space-y-2 ml-4">
-          {task.status === 'in-progress' && (
-            <button
-              onClick={handleTimerToggle}
-              className={`p-2 rounded-full ${
-                isTimerRunning 
-                  ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                  : 'bg-green-100 text-green-600 hover:bg-green-200'
-              } transition-colors duration-200`}
-              title={isTimerRunning ? 'Stop timer' : 'Start timer'}
-            >
-              {isTimerRunning ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </button>
-          )}
+        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start space-x-2 sm:space-x-0 sm:space-y-2 mt-4 sm:mt-0 sm:ml-4">
+          <div className="flex items-center space-x-2">
+            {task.status === 'in-progress' && (
+              <button
+                onClick={handleTimerToggle}
+                className={`p-2 rounded-full ${
+                  isTimerRunning 
+                    ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                    : 'bg-green-100 text-green-600 hover:bg-green-200'
+                } transition-colors duration-200`}
+                title={isTimerRunning ? 'Stop timer' : 'Start timer'}
+              >
+                {isTimerRunning ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center space-x-2">
             <Link
               to={`/tasks/${task._id}/edit`}
-              className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+              className="text-primary-600 hover:text-primary-800 text-xs sm:text-sm font-medium"
             >
               Edit
             </Link>
@@ -361,7 +363,7 @@ const TaskCard = ({ task, compact = false, onDelete, showDeleteButton = true }) 
                 <button
                 onClick={() => setShowDeleteConfirm(true)}
                   disabled={isDeleting}
-                  className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50 border border-red-300 px-2 py-1 rounded"
+                  className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium disabled:opacity-50 border border-red-300 px-2 py-1 rounded"
                   style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}

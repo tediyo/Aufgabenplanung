@@ -200,9 +200,9 @@ const CreateTask = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-3 sm:space-x-4">
         <button
           onClick={() => navigate(-1)}
           className="p-2 text-gray-400 hover:text-gray-600 rounded-md"
@@ -210,15 +210,15 @@ const CreateTask = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Create New Task</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Create New Task</h1>
           <p className="text-sm text-gray-500">Add a new task to your schedule</p>
         </div>
       </div>
 
       {/* Template Selection */}
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-white shadow rounded-lg p-4 sm:p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Choose a Template</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {Object.entries(templates).map(([key, template]) => (
             <button
               key={key}
@@ -256,13 +256,13 @@ const CreateTask = () => {
       </div>
 
       {/* Task Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white shadow rounded-lg p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Task Details</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* Title */}
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Title *
               </label>
@@ -278,7 +278,7 @@ const CreateTask = () => {
             </div>
 
             {/* Description */}
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description
               </label>
@@ -441,7 +441,7 @@ const CreateTask = () => {
         </div>
 
         {/* Recurring Settings */}
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
           <div className="flex items-center space-x-2 mb-4">
             <input
               type="checkbox"
@@ -456,7 +456,7 @@ const CreateTask = () => {
           </div>
 
           {formData.isRecurring && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Frequency
@@ -500,7 +500,7 @@ const CreateTask = () => {
         </div>
 
         {/* Notification Settings */}
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Notifications</h3>
           
           <div className="space-y-4">
@@ -562,18 +562,18 @@ const CreateTask = () => {
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex justify-end space-x-3">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:justify-end sm:space-y-0 sm:space-x-3">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="btn btn-secondary"
+            className="btn btn-secondary w-full sm:w-auto"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary inline-flex items-center"
+            className="btn btn-primary inline-flex items-center w-full sm:w-auto justify-center"
           >
             {loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
