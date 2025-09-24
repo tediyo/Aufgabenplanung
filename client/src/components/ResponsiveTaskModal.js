@@ -8,9 +8,24 @@ const ResponsiveTaskModal = ({ isOpen, onClose, onAddTask }) => {
     category: 'personal',
     priority: 'medium',
     timeFrame: 'custom',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     estimatedHours: 1,
     tags: ''
   });
+
+  const handleStartDateChange = (newStartDate) => {
+    setFormData(prev => {
+      const updated = { ...prev, startDate: newStartDate };
+      // If end date is before or equal to start date, update end date to one day after start date
+      if (new Date(prev.endDate) <= new Date(newStartDate)) {
+        const nextDay = new Date(newStartDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        updated.endDate = nextDay.toISOString().split('T')[0];
+      }
+      return updated;
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -21,8 +36,6 @@ const ResponsiveTaskModal = ({ isOpen, onClose, onAddTask }) => {
         status: 'todo',
         progress: 0,
         actualHours: 0,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
       };
       onAddTask(task);
@@ -32,6 +45,8 @@ const ResponsiveTaskModal = ({ isOpen, onClose, onAddTask }) => {
         category: 'personal',
         priority: 'medium',
         timeFrame: 'custom',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         estimatedHours: 1,
         tags: ''
       });
@@ -155,6 +170,36 @@ const ResponsiveTaskModal = ({ isOpen, onClose, onAddTask }) => {
                 min="0"
                 step="0.5"
                 className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              />
+            </div>
+          </div>
+
+          {/* Start Date and End Date */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Start Date *
+              </label>
+              <input
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => handleStartDateChange(e.target.value)}
+                className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                End Date *
+              </label>
+              <input
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                min={formData.startDate}
+                className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                required
               />
             </div>
           </div>

@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Development API URL for testing
-//const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 // Production API URL
-const API_BASE_URL = 'https://aufgabenplanung.onrender.com/api';
+//const API_BASE_URL = 'https://aufgabenplanung.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -16,31 +16,42 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    const userEmail = localStorage.getItem('userEmail') || 'test@example.com';
-    
+    // Add authentication token from sessionStorage
+    const token = sessionStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔑 Added auth token to request');
     } else {
-      // Use email-based authentication for demo
-      config.headers['X-User-Email'] = userEmail;
+      console.log('⚠️ No auth token found in sessionStorage');
     }
+    
+    console.log('📡 API Request:', config.method?.toUpperCase(), config.url);
+    console.log('📡 Full URL:', config.baseURL + config.url);
+    console.log('📡 Request data:', config.data);
     return config;
   },
   (error) => {
+    console.log('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor to handle errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('📡 API Response:', response.status, response.config.url);
+    return response;
+  },
   (error) => {
+    console.log('❌ API Error:', error.response?.status, error.config?.url, error.message);
+    
+    // Handle 401 Unauthorized errors
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      console.log('🔒 Unauthorized access - redirecting to login');
+      sessionStorage.removeItem('authToken');
       window.location.href = '/login';
     }
+    
     return Promise.reject(error);
   }
 );
@@ -73,6 +84,14 @@ export const tasksAPI = {
   startTimer: (id, description) => api.post(`/tasks/${id}/start-timer`, { description }),
   stopTimer: (id) => api.post(`/tasks/${id}/stop-timer`),
   getTemplates: () => api.get('/tasks/templates'),
+};
+
+export const futureTasksAPI = {
+  getFutureTasks: () => api.get('/future-tasks'),
+  createFutureTask: (futureTaskData) => api.post('/future-tasks', futureTaskData),
+  updateFutureTask: (id, futureTaskData) => api.put(`/future-tasks/${id}`, futureTaskData),
+  deleteFutureTask: (id) => api.delete(`/future-tasks/${id}`),
+  toggleFutureTask: (id) => api.patch(`/future-tasks/${id}/toggle`),
 };
 
 // Reports API

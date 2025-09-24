@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, LogOut, Trash2 } from 'lucide-react';
+import { Search, LogOut, Trash2, User, Clock } from 'lucide-react';
 import Logo from './Logo';
 
 const DesktopSidebar = ({ 
@@ -11,7 +11,8 @@ const DesktopSidebar = ({
   setFilter,
   searchTerm,
   setSearchTerm,
-  onDeleteTask
+  onDeleteTask,
+  onShowFutureTasks
 }) => {
   const [hoveredTask, setHoveredTask] = useState(null);
   const getStatusIcon = (status) => {
@@ -40,7 +41,7 @@ const DesktopSidebar = ({
   });
 
   return (
-    <div className="hidden lg:block w-80 h-screen bg-gray-800 text-white overflow-y-auto flex-shrink-0">
+    <div className="hidden lg:block w-80 h-screen bg-gray-800 text-white overflow-y-auto flex-shrink-0 max-h-screen">
       {/* Header */}
       <div className="p-6 border-b border-gray-700">
         <div className="flex items-center gap-3 mb-3">
@@ -157,8 +158,22 @@ const DesktopSidebar = ({
         </div>
       </div>
 
-      {/* Logout Button */}
-      <div className="p-4 border-t border-gray-700">
+      {/* Profile, Future Tasks and Logout Buttons */}
+      <div className="p-4 border-t border-gray-700 space-y-2">
+        <button
+          onClick={() => window.location.href = '/profile'}
+          className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all"
+        >
+          <User className="w-4 h-4" />
+          Profile
+        </button>
+        <button
+          onClick={onShowFutureTasks}
+          className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all"
+        >
+          <Clock className="w-4 h-4" />
+          Future Tasks
+        </button>
         <button
           onClick={onLogout}
           className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg hover:from-orange-600 hover:to-yellow-500 transition-all"

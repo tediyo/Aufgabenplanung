@@ -21,12 +21,15 @@ router.post('/register', [
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 ], async (req, res) => {
   try {
+    console.log('📝 Registration request received:', req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { name, email, password } = req.body;
+    console.log('📝 Processing registration for:', { name, email });
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -42,9 +45,11 @@ router.post('/register', [
     });
 
     await user.save();
+    console.log('✅ User saved to database:', user._id);
 
     // Generate token
     const token = generateToken(user._id);
+    console.log('✅ Token generated for user:', user._id);
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -56,8 +61,15 @@ router.post('/register', [
         preferences: user.preferences
       }
     });
+    console.log('✅ Registration response sent');
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Handle MongoDB duplicate key error
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'User already exists with this email' });
+    }
+    
     res.status(500).json({ message: 'Server error during registration' });
   }
 });
@@ -119,7 +131,11 @@ router.get('/me', auth, async (req, res) => {
         name: req.user.name,
         email: req.user.email,
         preferences: req.user.preferences,
-        avatar: req.user.avatar
+        avatar: req.user.avatar,
+        picture: req.user.picture,
+        isGoogleUser: req.user.isGoogleUser,
+        createdAt: req.user.createdAt,
+        updatedAt: req.user.updatedAt
       }
     });
   } catch (error) {

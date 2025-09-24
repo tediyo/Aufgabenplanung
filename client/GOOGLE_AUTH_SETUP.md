@@ -123,3 +123,6 @@ If you encounter issues:
 3. Test with different browsers
 4. Check network requests in DevTools
 
+
+
+

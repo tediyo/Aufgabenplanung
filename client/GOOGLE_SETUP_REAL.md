@@ -63,3 +63,6 @@ The current version works perfectly for testing - it simulates Google login and 
 
 The app is fully functional right now - you can test all features! 🎉
 
+
+
+

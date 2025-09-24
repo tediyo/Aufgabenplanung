@@ -1,411 +1,496 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { 
-  User, 
-  Mail, 
-  Bell, 
-  Clock, 
-  Globe,
-  Save,
-  Key,
-  Eye,
-  EyeOff
-} from 'lucide-react';
-import LoadingSpinner from '../components/LoadingSpinner';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { authAPI } from '../utils/api';
+import TinySuccessModal from '../components/TinySuccessModal';
 
 const Profile = () => {
-  const { user, updateProfile, changePassword } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [user, setUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    preferences: {
-      emailNotifications: user?.preferences?.emailNotifications ?? true,
-      reminderTime: user?.preferences?.reminderTime || '09:00',
-      timezone: user?.preferences?.timezone || 'UTC'
-    }
-  });
-
-  const [passwordData, setPasswordData] = useState({
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  const [passwordChecks, setPasswordChecks] = useState({
-    length: false,
-    match: false
-  });
+  const [errors, setErrors] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  React.useEffect(() => {
-    setPasswordChecks({
-      length: passwordData.newPassword.length >= 6,
-      match: passwordData.newPassword === passwordData.confirmPassword && passwordData.newPassword !== ''
-    });
-  }, [passwordData.newPassword, passwordData.confirmPassword]);
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
 
-  const handleProfileChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (name.startsWith('preferences.')) {
-      const prefKey = name.split('.')[1];
-      setProfileData(prev => ({
-        ...prev,
-        preferences: {
-          ...prev.preferences,
-          [prefKey]: type === 'checkbox' ? checked : value
-        }
-      }));
-    } else {
-      setProfileData(prev => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-      }));
-    }
-  };
-
-  const handlePasswordChange = (e) => {
-    setPasswordData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
-
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
+  const loadUserProfile = async () => {
     try {
-      const result = await updateProfile(profileData);
-      if (result.success) {
-        toast.success('Profile updated successfully!');
+      setIsLoading(true);
+      
+      console.log('🔍 Loading profile from server...');
+      
+      // Get token from sessionStorage
+      const token = sessionStorage.getItem('authToken');
+      
+      if (!token) {
+        console.log('❌ No authentication token found');
+        window.location.href = '/login';
+        return;
       }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!passwordChecks.length || !passwordChecks.match) {
-      toast.error('Please check password requirements');
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      const result = await changePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
+      
+      // Get user data from server using the /api/auth/me endpoint
+      const response = await fetch('http://localhost:5000/api/auth/me', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
       
-      if (result.success) {
-        setPasswordData({
+      console.log('🔍 Profile response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Profile loaded from server:', data.user);
+        
+        const userData = data.user;
+        setUser(userData);
+        setFormData({
+          name: userData.name,
+          email: userData.email,
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
         });
-        toast.success('Password changed successfully!');
+      } else {
+        console.log('❌ Failed to load profile from server');
+        // Redirect to login if not authenticated
+        window.location.href = '/login';
       }
+      
     } catch (error) {
-      console.error('Error changing password:', error);
+      console.error('❌ Error loading profile:', error);
+      // Redirect to login if there's an error
+      window.location.href = '/login';
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const tabs = [
-    { id: 'profile', name: 'Profile', icon: User },
-    { id: 'password', name: 'Password', icon: Key },
-    { id: 'notifications', name: 'Notifications', icon: Bell }
-  ];
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (formData.newPassword && formData.newPassword.length < 6) {
+      newErrors.newPassword = 'Password must be at least 6 characters';
+    }
+    
+    if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      // Update profile information
+      const updateData = {
+        name: formData.name,
+        email: formData.email
+      };
+      
+      // Only include password change if new password is provided
+      if (formData.newPassword) {
+        updateData.currentPassword = formData.currentPassword;
+        updateData.newPassword = formData.newPassword;
+      }
+      
+      await authAPI.updateProfile(updateData);
+      
+      // Update local storage
+      const updatedUser = { ...user, ...updateData };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      
+      setIsEditing(false);
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+      
+      setSuccessMessage('Profile updated successfully!');
+      setShowSuccessModal(true);
+      
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setSuccessMessage('Failed to update profile: ' + (error.response?.data?.message || error.message));
+      setShowSuccessModal(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setErrors({});
+    setIsEditing(false);
+  };
+
+  if (isLoading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-        <p className="text-sm text-gray-500">Manage your account settings and preferences</p>
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => window.history.back()}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
+              <p className="text-gray-600">Manage your account information</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`${
-                  activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center`}
-              >
-                <Icon className="h-4 w-4 mr-2" />
-                {tab.name}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Profile Tab */}
-      {activeTab === 'profile' && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Profile Information</h3>
-          
-          <form onSubmit={handleProfileSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={profileData.name}
-                  onChange={handleProfileChange}
-                  className="input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={user?.email}
-                  className="input bg-gray-50"
-                  disabled
-                />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Overview */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+               <div className="text-center">
+                 <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-gray-200">
+                   {console.log('User picture check:', user?.picture)}
+                   {user?.picture ? (
+                     <img 
+                       src={user.picture} 
+                       alt="Profile" 
+                       className="w-full h-full object-cover"
+                       onError={(e) => {
+                         console.log('Image failed to load:', user.picture);
+                         e.target.style.display = 'none';
+                         const fallback = e.target.nextSibling;
+                         if (fallback) {
+                           fallback.style.display = 'flex';
+                         }
+                       }}
+                       onLoad={() => {
+                         console.log('Image loaded successfully:', user.picture);
+                       }}
+                     />
+                   ) : null}
+                   <div className="w-full h-full bg-gradient-to-r from-blue-500 to-orange-400 flex items-center justify-center">
+                     <User className="w-10 h-10 text-white" />
+                   </div>
+                 </div>
+                 <h2 className="text-xl font-semibold text-gray-900 mb-1">{user?.name || 'User'}</h2>
+                 <p className="text-gray-600 mb-4">{user?.email || 'user@example.com'}</p>
+                 <div className="text-sm text-gray-500">
+                   Member since {user?.createdAt ? new Date(user.createdAt).getFullYear() : new Date().getFullYear()}
+                 </div>
+                 {user?.isGoogleUser && (
+                   <div className="text-xs text-blue-600 mt-2">
+                     🔗 Google Account
+                   </div>
+                 )}
+                 
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary inline-flex items-center"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                {loading ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Password Tab */}
-      {activeTab === 'password' && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-          
-          <form onSubmit={handlePasswordSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Current Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showCurrentPassword ? 'text' : 'password'}
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  className="input pr-10"
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                >
-                  {showCurrentPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                New Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  className="input pr-10"
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
-              <div className="mt-2 space-y-1">
-                <div className="flex items-center text-xs">
-                  {passwordChecks.length ? (
-                    <span className="text-green-600">✓</span>
-                  ) : (
-                    <span className="text-red-600">✗</span>
-                  )}
-                  <span className={`ml-2 ${passwordChecks.length ? 'text-green-600' : 'text-red-600'}`}>
-                    At least 6 characters
-                  </span>
+          {/* Profile Form */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style={{ 
+              background: 'linear-gradient(white, white) padding-box, linear-gradient(45deg, #3b82f6, #f59e0b, #fbbf24, #ffffff) border-box',
+              border: '3px solid transparent'
+            }}>
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                    {isEditing ? 'Edit Profile' : 'Profile Information'}
+                  </h2>
                 </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-                className="input"
-                required
-              />
-              <div className="mt-2 space-y-1">
-                <div className="flex items-center text-xs">
-                  {passwordChecks.match ? (
-                    <span className="text-green-600">✓</span>
-                  ) : (
-                    <span className="text-red-600">✗</span>
-                  )}
-                  <span className={`ml-2 ${passwordChecks.match ? 'text-green-600' : 'text-red-600'}`}>
-                    Passwords match
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={loading || !passwordChecks.length || !passwordChecks.match}
-                className="btn btn-primary inline-flex items-center"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                ) : (
-                  <Key className="h-4 w-4 mr-2" />
-                )}
-                {loading ? 'Changing...' : 'Change Password'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Notifications Tab */}
-      {activeTab === 'notifications' && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h3>
-          
-          <form onSubmit={handleProfileSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  name="preferences.emailNotifications"
-                  checked={profileData.preferences.emailNotifications}
-                  onChange={handleProfileChange}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label className="text-sm font-medium text-gray-700">
-                  Enable email notifications
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Daily Reminder Time
-                  </label>
-                  <input
-                    type="time"
-                    name="preferences.reminderTime"
-                    value={profileData.preferences.reminderTime}
-                    onChange={handleProfileChange}
-                    className="input"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Timezone
-                  </label>
-                  <select
-                    name="preferences.timezone"
-                    value={profileData.preferences.timezone}
-                    onChange={handleProfileChange}
-                    className="select"
+                {!isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium text-sm"
                   >
-                    <option value="UTC">UTC</option>
-                    <option value="America/New_York">Eastern Time</option>
-                    <option value="America/Chicago">Central Time</option>
-                    <option value="America/Denver">Mountain Time</option>
-                    <option value="America/Los_Angeles">Pacific Time</option>
-                    <option value="Europe/London">London</option>
-                    <option value="Europe/Paris">Paris</option>
-                    <option value="Asia/Tokyo">Tokyo</option>
-                    <option value="Asia/Shanghai">Shanghai</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary inline-flex items-center"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                ) : (
-                  <Bell className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </button>
                 )}
-                {loading ? 'Saving...' : 'Save Preferences'}
-              </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-6">
+                {/* Name Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                        errors.name ? 'border-red-300' : 'border-gray-300'
+                      } ${!isEditing ? 'bg-gray-50 text-gray-500' : 'bg-white'}`}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                  )}
+                </div>
+
+                {/* Email Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                        errors.email ? 'border-red-300' : 'border-gray-300'
+                      } ${!isEditing ? 'bg-gray-50 text-gray-500' : 'bg-white'}`}
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  )}
+                </div>
+
+                 {/* Password Section - Only show when editing and not a Google user */}
+                 {isEditing && !user?.isGoogleUser && (
+                   <>
+                     <div className="border-t border-gray-200 pt-6">
+                       <h3 className="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
+                      
+                      {/* Current Password */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Current Password
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            name="currentPassword"
+                            value={formData.currentPassword}
+                            onChange={handleInputChange}
+                            className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            placeholder="Enter current password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* New Password */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          New Password
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type={showNewPassword ? 'text' : 'password'}
+                            name="newPassword"
+                            value={formData.newPassword}
+                            onChange={handleInputChange}
+                            className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                              errors.newPassword ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                            placeholder="Enter new password (optional)"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        {errors.newPassword && (
+                          <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>
+                        )}
+                      </div>
+
+                      {/* Confirm Password */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Confirm New Password
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            name="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={handleInputChange}
+                            className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                              errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                            placeholder="Confirm new password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        {errors.confirmPassword && (
+                          <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                        )}
+                      </div>
+                     </div>
+                   </>
+                 )}
+
+                 {/* Google User Notice */}
+                 {isEditing && user?.isGoogleUser && (
+                   <div className="border-t border-gray-200 pt-6">
+                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                       <div className="flex items-start gap-3">
+                         <div className="w-5 h-5 text-blue-600 mt-0.5">🔗</div>
+                         <div>
+                           <h4 className="text-sm font-medium text-blue-800 mb-1">Google Account</h4>
+                           <p className="text-sm text-blue-700">
+                             You're signed in with Google. To change your password, please visit your Google Account settings.
+                           </p>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
+                {/* Action Buttons */}
+                {isEditing && (
+                  <div className="flex gap-3 pt-6 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </form>
             </div>
-          </form>
+          </div>
         </div>
-      )}
+      </div>
+      
+      {/* Tiny Success Modal */}
+      <TinySuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={successMessage}
+        duration={4000}
+      />
     </div>
   );
 };
 
 export default Profile;
-

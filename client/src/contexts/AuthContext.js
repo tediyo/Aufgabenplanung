@@ -59,20 +59,8 @@ export const AuthProvider = ({ children }) => {
 
   // Check for existing token on app load
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    if (token && user) {
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: {
-          token,
-          user: JSON.parse(user),
-        },
-      });
-    } else {
-      dispatch({ type: 'LOGOUT' });
-    }
+    // Skip localStorage check - always start as not authenticated
+    dispatch({ type: 'LOGOUT' });
   }, []);
 
   const login = async (credentials) => {
@@ -81,9 +69,7 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login(credentials);
       const { token, user } = response.data;
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
+      // Skip localStorage - just store in memory
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: { token, user },
@@ -104,22 +90,57 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
+      console.log('🔄 Starting registration with data:', userData);
+      console.log('🔄 UserData type:', typeof userData);
+      console.log('🔄 UserData keys:', Object.keys(userData));
       dispatch({ type: 'LOGIN_START' });
-      const response = await authAPI.register(userData);
-      const { token, user } = response.data;
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: { token, user },
-      });
-
-      toast.success('Registration successful!');
-      return { success: true };
+      
+      // Test server connectivity first
+      console.log('🔍 Testing server connectivity...');
+      try {
+        const testResponse = await fetch('http://localhost:5000/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData)
+        });
+        console.log('🔍 Test response status:', testResponse.status);
+        console.log('🔍 Test response headers:', testResponse.headers);
+        const testData = await testResponse.json();
+        console.log('🔍 Test response data:', testData);
+        
+        if (testResponse.ok) {
+          console.log('✅ Direct fetch registration successful!');
+          const { token, user } = testData;
+          dispatch({
+            type: 'LOGIN_SUCCESS',
+            payload: { token, user },
+          });
+          toast.success('Registration successful!');
+          return { success: true };
+        } else {
+          // Handle specific error cases
+          if (testResponse.status === 400 && testData.message === 'User already exists with this email') {
+            throw new Error('An account with this email already exists. Please use a different email or try logging in.');
+          } else if (testResponse.status === 400 && testData.errors) {
+            // Handle validation errors
+            const errorMessages = testData.errors.map(err => err.msg).join(', ');
+            throw new Error(errorMessages);
+          } else {
+            throw new Error(`Server returned ${testResponse.status}: ${testData.message || 'Unknown error'}`);
+          }
+        }
+      } catch (fetchError) {
+        console.log('❌ Direct fetch failed:', fetchError);
+        throw fetchError;
+      }
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed';
+      console.log('❌ Registration failed:', error);
+      console.log('❌ Error type:', typeof error);
+      console.log('❌ Error message:', error.message);
+      console.log('❌ Error stack:', error.stack);
+      const message = error.message || 'Registration failed';
       dispatch({
         type: 'LOGIN_FAILURE',
         payload: message,
@@ -130,8 +151,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Clear sessionStorage and memory
+    sessionStorage.removeItem('authToken');
     dispatch({ type: 'LOGOUT' });
     toast.success('Logged out successfully');
   };
@@ -141,7 +162,7 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.updateProfile(userData);
       const { user } = response.data;
 
-      localStorage.setItem('user', JSON.stringify(user));
+      // Skip localStorage - just update memory
       dispatch({
         type: 'UPDATE_USER',
         payload: user,

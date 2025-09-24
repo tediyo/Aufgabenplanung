@@ -15,8 +15,7 @@ const GoogleLoginButtonFallback = ({ onSuccess, onError, text = "Continue with G
         provider: 'google'
       };
       
-      // Store in localStorage
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      // No localStorage - just call success callback
       onSuccess(mockUser);
     }
   };
@@ -64,4 +63,7 @@ const GoogleLoginButtonFallback = ({ onSuccess, onError, text = "Continue with G
 };
 
 export default GoogleLoginButtonFallback;
+
+
+
 

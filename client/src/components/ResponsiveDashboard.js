@@ -3,6 +3,8 @@ import { Plus, Play, Pause, CheckCircle, RotateCcw, Trash2 } from 'lucide-react'
 import MobileDrawer from './MobileDrawer';
 import DesktopSidebar from './DesktopSidebar';
 import ResponsiveTaskModal from './ResponsiveTaskModal';
+import SuccessModal from './SuccessModal';
+import FutureTasks from './FutureTasks';
 import LazyLoadWrapper from './LazyLoadWrapper';
 import { useMobileOptimization, useDebounce } from '../hooks/useMobileOptimization';
 import { tasksAPI } from '../utils/api';
@@ -12,29 +14,28 @@ const ResponsiveDashboard = () => {
   
   // Debug authentication info
   const debugAuth = () => {
-    const token = localStorage.getItem('token');
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    const userEmail = userData.email || localStorage.getItem('userEmail') || 'test@example.com';
-    
-    console.log('Auth Debug:', {
-      hasToken: !!token,
-      token: token ? token.substring(0, 20) + '...' : 'none',
-      userEmail: userEmail,
-      userData: userData
-    });
+    console.log('Auth Debug: No localStorage authentication - using memory only');
   };
   
   const [tasks, setTasks] = useState([]);
 
   const [selectedTask, setSelectedTask] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdTask, setCreatedTask] = useState(null);
   const [activeTimer, setActiveTimer] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showFutureTasks, setShowFutureTasks] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const handleShowFutureTasks = () => {
+    setShowFutureTasks(true);
+    setSelectedTask(null); // Clear selected task when showing future tasks
+  };
 
   const addTask = async (newTask) => {
     try {
@@ -61,7 +62,10 @@ const ResponsiveDashboard = () => {
         }
       };
 
-      console.log('Task data prepared:', taskData);
+      console.log('📝 Original task data from modal:', newTask);
+      console.log('📤 Task data prepared for server:', taskData);
+      console.log('📝 Description value:', newTask.description);
+      console.log('📝 Description in prepared data:', taskData.description);
       
       // Use proper API call
       const result = await tasksAPI.createTask(taskData);
@@ -69,6 +73,10 @@ const ResponsiveDashboard = () => {
       console.log('Task created successfully:', result);
       // Add to local state with server response
       setTasks([...tasks, { ...newTask, id: result.data.task._id }]);
+      
+      // Show success modal
+      setCreatedTask(newTask);
+      setShowSuccessModal(true);
       
     } catch (error) {
       console.error('Error creating task:', error);
@@ -84,6 +92,7 @@ const ResponsiveDashboard = () => {
       console.log('Loading tasks from server...');
       const response = await tasksAPI.getTasks();
       console.log('Loaded tasks from server:', response.data.tasks);
+      console.log('📝 First task description (if exists):', response.data.tasks?.[0]?.description);
       setTasks(response.data.tasks || []);
     } catch (error) {
       console.error('Error loading tasks:', error);
@@ -200,10 +209,19 @@ const ResponsiveDashboard = () => {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(!isDrawerOpen)}
         tasks={tasks}
-        onTaskSelect={setSelectedTask}
+        onTaskSelect={(task) => {
+          console.log('📝 Selected task:', task);
+          console.log('📝 Selected task description:', task.description);
+          console.log('📝 Description type:', typeof task.description);
+          console.log('📝 Description length:', task.description?.length);
+          setSelectedTask(task);
+          setShowFutureTasks(false); // Hide future tasks when selecting a regular task
+        }}
         selectedTask={selectedTask}
         onLogout={() => {
-          localStorage.removeItem('user');
+          console.log('🔄 Logging out...');
+          // Clear sessionStorage and redirect
+          sessionStorage.removeItem('authToken');
           window.location.href = '/login';
         }}
         filter={filter}
@@ -214,15 +232,25 @@ const ResponsiveDashboard = () => {
           setShowDeleteConfirm(true);
           setSelectedTask(tasks.find(task => task.id === id));
         }}
+        onShowFutureTasks={handleShowFutureTasks}
       />
 
       {/* Desktop Sidebar */}
       <DesktopSidebar
         tasks={tasks}
-        onTaskSelect={setSelectedTask}
+        onTaskSelect={(task) => {
+          console.log('📝 Selected task:', task);
+          console.log('📝 Selected task description:', task.description);
+          console.log('📝 Description type:', typeof task.description);
+          console.log('📝 Description length:', task.description?.length);
+          setSelectedTask(task);
+          setShowFutureTasks(false); // Hide future tasks when selecting a regular task
+        }}
         selectedTask={selectedTask}
         onLogout={() => {
-          localStorage.removeItem('user');
+          console.log('🔄 Logging out...');
+          // Clear sessionStorage and redirect
+          sessionStorage.removeItem('authToken');
           window.location.href = '/login';
         }}
         filter={filter}
@@ -233,11 +261,12 @@ const ResponsiveDashboard = () => {
           setShowDeleteConfirm(true);
           setSelectedTask(tasks.find(task => task.id === id));
         }}
+        onShowFutureTasks={handleShowFutureTasks}
       />
 
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto lg:mt-0 mt-16">
+      <div className="flex-1 overflow-y-auto lg:mt-0 mt-16 h-screen">
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 lg:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -281,13 +310,22 @@ const ResponsiveDashboard = () => {
             </div>
           </LazyLoadWrapper>
 
+          {/* Future Tasks Section */}
+          {showFutureTasks && (
+            <FutureTasks />
+          )}
+
           {/* Task Details */}
-          {selectedTask ? (
+          {selectedTask && !showFutureTasks ? (
             <LazyLoadWrapper>
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 lg:p-6">
                 <h2 className="text-xl lg:text-2xl font-bold mb-2">{selectedTask.title}</h2>
-                <p className="text-blue-100">{selectedTask.description}</p>
+                {selectedTask.description ? (
+                  <p className="text-blue-100 text-sm lg:text-base leading-relaxed">{selectedTask.description}</p>
+                ) : (
+                  <p className="text-blue-200 text-sm lg:text-base italic">No description provided</p>
+                )}
               </div>
               <div className="p-4 lg:p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -338,6 +376,16 @@ const ResponsiveDashboard = () => {
                     <div className="mt-1 text-sm text-gray-900">{selectedTask.endDate}</div>
                   </div>
                 </div>
+                
+                {/* Description Section */}
+                {selectedTask.description && (
+                  <div className="mb-6">
+                    <span className="text-sm font-medium text-gray-600">Description:</span>
+                    <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-900 leading-relaxed">{selectedTask.description}</p>
+                    </div>
+                  </div>
+                )}
                 
                 {selectedTask.tags.length > 0 && (
                   <div className="mb-6">
@@ -420,7 +468,7 @@ const ResponsiveDashboard = () => {
               </div>
               </div>
             </LazyLoadWrapper>
-          ) : (
+          ) : !showFutureTasks ? (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
               <div className="text-6xl mb-4">📋</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a Task</h3>
@@ -434,7 +482,7 @@ const ResponsiveDashboard = () => {
                 <span className="sm:hidden">Create Task</span>
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -443,6 +491,22 @@ const ResponsiveDashboard = () => {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onAddTask={addTask}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal 
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+          setCreatedTask(null);
+        }}
+        onCreateAnother={() => {
+          setShowSuccessModal(false);
+          setCreatedTask(null);
+          setShowModal(true);
+        }}
+        taskTitle={createdTask?.title}
+        taskDescription={createdTask?.description}
       />
 
       {/* Delete Confirmation Modal */}
