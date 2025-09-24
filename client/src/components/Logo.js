@@ -26,7 +26,7 @@ const Logo = ({ size = 'default', className = '' }) => {
         <div className="relative w-full h-full rounded-full overflow-hidden shadow-lg">
           <img 
             src="/images/pmp5.png" 
-            alt="Task Scheduler Logo" 
+            alt="PPM Logo" 
             className="w-full h-full object-cover"
             onError={(e) => {
               // Fallback to emoji if image fails to load
