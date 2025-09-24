@@ -31,91 +31,51 @@ const Profile = () => {
     try {
       setIsLoading(true);
       
-      // First get user data from localStorage
-      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const userEmail = localStorage.getItem('userEmail') || localUser.email || 'user@example.com';
+      console.log('🔍 Loading profile from server...');
       
+      // Get token from sessionStorage
+      const token = sessionStorage.getItem('authToken');
       
-      // Try to get profile from API first
-      try {
-        const response = await authAPI.getProfile();
-        const userData = response.data;
-        
-        if (userData && (userData.name || userData.email)) {
-          // Handle the database structure properly
-          const processedUser = {
-            _id: userData._id,
-            name: userData.name,
-            email: userData.email,
-            avatar: userData.avatar,
-            picture: userData.picture,
-            createdAt: userData.createdAt,
-            updatedAt: userData.updatedAt,
-            isGoogleUser: userData.isGoogleUser,
-            preferences: userData.preferences
-          };
-          
-          setUser(processedUser);
-          setFormData({
-            name: userData.name || 'User',
-            email: userData.email || 'user@example.com',
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: ''
-          });
-          return; // Success, exit early
-        }
-      } catch (apiError) {
-        // API call failed, will use localStorage fallback
+      if (!token) {
+        console.log('❌ No authentication token found');
+        window.location.href = '/login';
+        return;
       }
       
-      // Fallback to localStorage data
-      // Extract name from email if no name is stored
-      let displayName = localUser.name;
-      
-      if (!displayName || displayName === 'User') {
-        // Try to extract name from email
-        const emailName = userEmail.split('@')[0];
-        // Handle common patterns in email names
-        if (emailName.includes('tewodros') || emailName.includes('berhanu')) {
-          displayName = 'Tewodros Berhanu'; // Use the correct name from database
-        } else {
-          displayName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+      // Get user data from server using the /api/auth/me endpoint
+      const response = await fetch('http://localhost:5000/api/auth/me', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      }
-      
-      const finalUser = {
-        name: displayName,
-        email: userEmail,
-        _id: localUser._id,
-        isGoogleUser: localUser.isGoogleUser || false,
-        picture: localUser.picture,
-        createdAt: localUser.createdAt
-      };
-      
-      setUser(finalUser);
-      setFormData({
-        name: displayName,
-        email: userEmail,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
       });
+      
+      console.log('🔍 Profile response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Profile loaded from server:', data.user);
+        
+        const userData = data.user;
+        setUser(userData);
+        setFormData({
+          name: userData.name,
+          email: userData.email,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        console.log('❌ Failed to load profile from server');
+        // Redirect to login if not authenticated
+        window.location.href = '/login';
+      }
       
     } catch (error) {
-      // Final fallback
-      const fallbackUser = {
-        name: 'User',
-        email: 'user@example.com'
-      };
-      setUser(fallbackUser);
-      setFormData({
-        name: 'User',
-        email: 'user@example.com',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
+      console.error('❌ Error loading profile:', error);
+      // Redirect to login if there's an error
+      window.location.href = '/login';
     } finally {
       setIsLoading(false);
     }
@@ -262,20 +222,26 @@ const Profile = () => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                <div className="text-center">
                  <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-gray-200">
+                   {console.log('User picture check:', user?.picture)}
                    {user?.picture ? (
                      <img 
                        src={user.picture} 
                        alt="Profile" 
                        className="w-full h-full object-cover"
                        onError={(e) => {
+                         console.log('Image failed to load:', user.picture);
                          e.target.style.display = 'none';
-                         e.target.nextSibling.style.display = 'flex';
+                         const fallback = e.target.nextSibling;
+                         if (fallback) {
+                           fallback.style.display = 'flex';
+                         }
+                       }}
+                       onLoad={() => {
+                         console.log('Image loaded successfully:', user.picture);
                        }}
                      />
                    ) : null}
-                   <div 
-                     className={`w-full h-full bg-gradient-to-r from-blue-500 to-orange-400 flex items-center justify-center ${user?.picture ? 'hidden' : 'flex'}`}
-                   >
+                   <div className="w-full h-full bg-gradient-to-r from-blue-500 to-orange-400 flex items-center justify-center">
                      <User className="w-10 h-10 text-white" />
                    </div>
                  </div>
@@ -289,6 +255,7 @@ const Profile = () => {
                      🔗 Google Account
                    </div>
                  )}
+                 
               </div>
             </div>
           </div>

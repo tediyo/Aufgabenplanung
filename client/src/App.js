@@ -6,6 +6,7 @@ import Logo from './components/Logo';
 import GoogleLoginButton from './components/GoogleLoginButtonReal';
 import GoogleCallback from './pages/GoogleCallback';
 import Profile from './pages/Profile';
+import MiniModal from './components/MiniModal';
 import './utils/responsiveTest'; // Import responsive test utilities
 
 // Error Boundary Component
@@ -53,18 +54,48 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, type: 'info', title: '', message: '' });
 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (email && password) {
       setIsLoading(true);
       try {
-        // For demo purposes, we'll just store in localStorage
-        // In a real app, you'd call the API here
-        localStorage.setItem('user', JSON.stringify({ email, name: 'User' }));
-        navigate('/dashboard');
-    } catch (error) {
-        console.error('Login error:', error);
+        console.log('🔄 Starting login with data:', { email });
+        
+        // Call the server API for login
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        console.log('🔍 Login response status:', response.status);
+        const data = await response.json();
+        console.log('🔍 Login response data:', data);
+        
+        if (response.ok) {
+          console.log('✅ Login successful!');
+          const { token, user } = data;
+          
+          // Store token in sessionStorage for this session only
+          sessionStorage.setItem('authToken', token);
+          console.log('📝 Login successful for user:', user.email);
+          
+          navigate('/dashboard');
+        } else {
+          throw new Error(data.message || 'Login failed');
+        }
+      } catch (error) {
+        console.error('❌ Login error:', error);
+        setModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Login Failed',
+          message: error.message
+        });
       } finally {
         setIsLoading(false);
       }
@@ -73,13 +104,22 @@ const Login = () => {
 
   const handleGoogleSuccess = (user) => {
     setGoogleLoading(false);
+    console.log('✅ Google login successful:', user);
+    
+    // No localStorage - user data will be fetched from server when needed
+    console.log('📝 Google login successful for user:', user.email);
     navigate('/dashboard');
   };
 
   const handleGoogleError = (error) => {
     setGoogleLoading(false);
     console.error('Google login error:', error);
-    alert('Google login failed: ' + error);
+    setModal({
+      isOpen: true,
+      type: 'error',
+      title: 'Google Login Failed',
+      message: error
+    });
   };
 
   return (
@@ -164,12 +204,21 @@ const Login = () => {
           </button>
         </div>
       </div>
+      
+      {/* Mini Modal */}
+      <MiniModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        type={modal.type}
+        title={modal.title}
+        message={modal.message}
+      />
     </div>
   );
 };
 
-// Register Component
-const Register = () => {
+// Register Component - Updated
+const RegisterPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -179,24 +228,80 @@ const Register = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, type: 'info', title: '', message: '' });
 
   const handleRegister = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Password Mismatch',
+        message: 'Passwords do not match. Please make sure both password fields are identical.'
+      });
       return;
     }
 
     setIsLoading(true);
     try {
-      // For demo purposes, we'll just store in localStorage
-      localStorage.setItem('user', JSON.stringify({ 
-          email: formData.email,
-        name: formData.name 
-      }));
+      console.log('🔄 Starting registration with data:', formData);
+      
+      // Test server connectivity first
+      console.log('🔍 Testing server connectivity...');
+      const testResponse = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      console.log('🔍 Test response status:', testResponse.status);
+      const testData = await testResponse.json();
+      console.log('🔍 Test response data:', testData);
+      
+      if (testResponse.ok) {
+        console.log('✅ Direct fetch registration successful!');
+        console.log('📝 Full response data:', testData);
+        const { token, user } = testData;
+        console.log('📝 Extracted user data:', user);
+        console.log('📝 Extracted token:', token);
+        
+        // Store token in sessionStorage for this session only
+        sessionStorage.setItem('authToken', token);
+        console.log('📝 Registration successful for user:', user.email);
+        
         navigate('/dashboard');
+      } else {
+        // Handle specific error cases
+        if (testResponse.status === 400 && testData.message === 'User already exists with this email') {
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Registration Failed',
+            message: 'An account with this email already exists. Please use a different email or try logging in.'
+          });
+        } else if (testResponse.status === 400 && testData.errors) {
+          // Handle validation errors
+          const errorMessages = testData.errors.map(err => err.msg).join(', ');
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Registration Failed',
+            message: errorMessages
+          });
+        } else {
+          throw new Error(`Server returned ${testResponse.status}: ${testData.message || 'Unknown error'}`);
+        }
+      }
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('❌ Registration error:', error);
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Registration Failed',
+        message: error.message
+      });
     } finally {
       setIsLoading(false);
     }
@@ -204,13 +309,22 @@ const Register = () => {
 
   const handleGoogleSuccess = (user) => {
     setGoogleLoading(false);
+    console.log('✅ Google login successful:', user);
+    
+    // No localStorage - user data will be fetched from server when needed
+    console.log('📝 Google login successful for user:', user.email);
     navigate('/dashboard');
   };
 
   const handleGoogleError = (error) => {
     setGoogleLoading(false);
     console.error('Google login error:', error);
-    alert('Google login failed: ' + error);
+    setModal({
+      isOpen: true,
+      type: 'error',
+      title: 'Google Login Failed',
+      message: error
+    });
   };
 
   return (
@@ -329,8 +443,29 @@ const Register = () => {
           </button>
         </div>
       </div>
+      
+      {/* Mini Modal */}
+      <MiniModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        type={modal.type}
+        title={modal.title}
+        message={modal.message}
+      />
     </div>
   );
+};
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = sessionStorage.getItem('authToken');
+  
+  if (!token) {
+    window.location.href = '/login';
+    return null;
+  }
+  
+  return children;
 };
 
 // Main App Component
@@ -338,10 +473,9 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   React.useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (user) {
-      setIsLoggedIn(true);
-    }
+    // Check if user has a valid token in sessionStorage
+    const token = sessionStorage.getItem('authToken');
+    setIsLoggedIn(!!token);
   }, []);
 
   return (
@@ -351,9 +485,9 @@ function App() {
         <Routes>
             <Route path="/" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<ResponsiveDashboard />} />
-            <Route path="/profile" element={<Profile />} />
+          <Route path="/register" element={<RegisterPage />} />
+            <Route path="/dashboard" element={<ProtectedRoute><ResponsiveDashboard /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route path="*" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
         </Routes>

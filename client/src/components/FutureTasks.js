@@ -27,9 +27,9 @@ const FutureTasks = () => {
       setIsLoading(true);
       console.log('🔄 Loading future tasks...');
       console.log('🔑 Current auth state:', {
-        token: localStorage.getItem('token'),
-        userEmail: localStorage.getItem('userEmail'),
-        user: localStorage.getItem('user')
+        token: sessionStorage.getItem('authToken'),
+        userEmail: 'Using sessionStorage token',
+        user: 'Using sessionStorage token'
       });
       const response = await futureTasksAPI.getFutureTasks();
       console.log('✅ Future tasks loaded:', response.data);
@@ -65,8 +65,8 @@ const FutureTasks = () => {
 
       console.log('🚀 Creating future task with data:', taskData);
       console.log('🔑 Auth headers:', {
-        token: localStorage.getItem('token'),
-        userEmail: localStorage.getItem('userEmail')
+        token: sessionStorage.getItem('authToken'),
+        userEmail: 'Using sessionStorage token'
       });
 
       if (editingTask) {

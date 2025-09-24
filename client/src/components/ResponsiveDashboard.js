@@ -14,16 +14,7 @@ const ResponsiveDashboard = () => {
   
   // Debug authentication info
   const debugAuth = () => {
-    const token = localStorage.getItem('token');
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    const userEmail = userData.email || localStorage.getItem('userEmail') || 'test@example.com';
-    
-    console.log('Auth Debug:', {
-      hasToken: !!token,
-      token: token ? token.substring(0, 20) + '...' : 'none',
-      userEmail: userEmail,
-      userData: userData
-    });
+    console.log('Auth Debug: No localStorage authentication - using memory only');
   };
   
   const [tasks, setTasks] = useState([]);
@@ -228,7 +219,9 @@ const ResponsiveDashboard = () => {
         }}
         selectedTask={selectedTask}
         onLogout={() => {
-          localStorage.removeItem('user');
+          console.log('🔄 Logging out...');
+          // Clear sessionStorage and redirect
+          sessionStorage.removeItem('authToken');
           window.location.href = '/login';
         }}
         filter={filter}
@@ -255,7 +248,9 @@ const ResponsiveDashboard = () => {
         }}
         selectedTask={selectedTask}
         onLogout={() => {
-          localStorage.removeItem('user');
+          console.log('🔄 Logging out...');
+          // Clear sessionStorage and redirect
+          sessionStorage.removeItem('authToken');
           window.location.href = '/login';
         }}
         filter={filter}

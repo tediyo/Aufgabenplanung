@@ -16,11 +16,12 @@ const Register = () => {
     length: false,
     match: false,
   });
-  const { register, isAuthenticated, loading } = useAuth();
+  const { register, isAuthenticated, loading, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('User is already authenticated, redirecting to dashboard');
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
@@ -42,13 +43,23 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('📝 Form submitted with data:', formData);
+    console.log('📝 Password checks:', passwordChecks);
+    
     if (!passwordChecks.length || !passwordChecks.match) {
+      console.log('❌ Password validation failed');
       return;
     }
 
+    console.log('✅ Password validation passed, calling register...');
     const result = await register(formData);
+    console.log('📝 Register result:', result);
+    
     if (result.success) {
+      console.log('✅ Registration successful, navigating to dashboard');
       navigate('/dashboard');
+    } else {
+      console.log('❌ Registration failed:', result.error);
     }
   };
 

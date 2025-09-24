@@ -86,8 +86,7 @@ const GoogleLoginButtonWorking = ({ onSuccess, onError, text = "Continue with Go
             provider: 'google'
           };
           
-          // Store in localStorage
-          localStorage.setItem('user', JSON.stringify(mockUser));
+          // No localStorage - just call success callback
           onSuccess(mockUser);
         };
       }
