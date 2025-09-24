@@ -40,27 +40,27 @@ const MiniModal = ({ isOpen, onClose, type = 'info', title, message, duration = 
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-sm w-full">
+    <div className="fixed top-4 right-4 z-50 max-w-xs w-full">
       {/* Modal */}
-      <div className={`relative ${getGradient()} rounded-lg shadow-lg p-4 transform transition-all duration-300 ease-in-out`}>
+      <div className={`relative ${getGradient()} rounded-md shadow-lg p-3 transform transition-all duration-300 ease-in-out`}>
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 p-1 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+          className="absolute top-1 right-1 p-0.5 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
         >
-          <X className="w-3 h-3 text-white" />
+          <X className="w-2.5 h-2.5 text-white" />
         </button>
         
         {/* Content */}
-        <div className="flex items-center space-x-3 pr-6">
+        <div className="flex items-center space-x-2 pr-5">
           {getIcon()}
           <div className="flex-1">
             {title && (
-              <h3 className="text-sm font-semibold text-white mb-1">
+              <h3 className="text-xs font-semibold text-white mb-0.5">
                 {title}
               </h3>
             )}
-            <p className="text-white text-xs leading-relaxed opacity-90">
+            <p className="text-white text-xs leading-tight opacity-90">
               {message}
             </p>
           </div>

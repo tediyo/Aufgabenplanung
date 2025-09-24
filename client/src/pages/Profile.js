@@ -43,7 +43,7 @@ const Profile = () => {
       }
       
       // Get user data from server using the /api/auth/me endpoint
-      const response = await fetch('http://localhost:5000/api/auth/me', {
+      const response = await fetch('https://aufgabenplanung.onrender.com/api/auth/me', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

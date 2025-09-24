@@ -64,7 +64,7 @@ const Login = () => {
         console.log('🔄 Starting login with data:', { email });
         
         // Call the server API for login
-        const response = await fetch('http://localhost:5000/api/auth/login', {
+        const response = await fetch('https://aufgabenplanung.onrender.com/api/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ const Login = () => {
             disabled={isLoading}
             className="w-full py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Signing in...' : '🚀 Login / Register'}
+            {isLoading ? 'Signing in...' : ' Login / Register'}
           </button>
         </form>
         
@@ -248,7 +248,7 @@ const RegisterPage = () => {
       
       // Test server connectivity first
       console.log('🔍 Testing server connectivity...');
-      const testResponse = await fetch('http://localhost:5000/api/auth/register', {
+      const testResponse = await fetch('https://aufgabenplanung.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -420,7 +420,7 @@ const RegisterPage = () => {
             disabled={isLoading}
             className="w-full py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Creating Account...' : '🚀 Create Account'}
+            {isLoading ? 'Creating Account...' : ' Create Account'}
           </button>
         </form>
         

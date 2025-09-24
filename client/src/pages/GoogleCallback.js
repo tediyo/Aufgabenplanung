@@ -36,7 +36,7 @@ const GoogleCallback = () => {
               'https://aufgabenplanung-server.onrender.com/api/auth/google',
               'https://aufgabenplanung-backend.onrender.com/api/auth/google'
             ]
-          : ['http://localhost:5000/api/auth/google'];
+          : ['https://aufgabenplanung.onrender.com/api/auth/google'];
         
         let response;
         let lastError;
