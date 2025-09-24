@@ -187,7 +187,7 @@ const Login = () => {
             disabled={isLoading}
             className="w-full py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Signing in...' : '🚀 Login / Register'}
+            {isLoading ? 'Signing in...' : ' Login / Register'}
           </button>
         </form>
         
@@ -420,7 +420,7 @@ const RegisterPage = () => {
             disabled={isLoading}
             className="w-full py-3 bg-gradient-to-r from-blue-500 to-orange-400 text-white rounded-lg hover:from-blue-600 hover:to-orange-500 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Creating Account...' : '🚀 Create Account'}
+            {isLoading ? 'Creating Account...' : ' Create Account'}
           </button>
         </form>
         
