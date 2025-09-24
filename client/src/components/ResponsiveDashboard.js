@@ -4,6 +4,7 @@ import MobileDrawer from './MobileDrawer';
 import DesktopSidebar from './DesktopSidebar';
 import ResponsiveTaskModal from './ResponsiveTaskModal';
 import SuccessModal from './SuccessModal';
+import FutureTasks from './FutureTasks';
 import LazyLoadWrapper from './LazyLoadWrapper';
 import { useMobileOptimization, useDebounce } from '../hooks/useMobileOptimization';
 import { tasksAPI } from '../utils/api';
@@ -37,7 +38,13 @@ const ResponsiveDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showFutureTasks, setShowFutureTasks] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const handleShowFutureTasks = () => {
+    setShowFutureTasks(true);
+    setSelectedTask(null); // Clear selected task when showing future tasks
+  };
 
   const addTask = async (newTask) => {
     try {
@@ -217,6 +224,7 @@ const ResponsiveDashboard = () => {
           console.log('📝 Description type:', typeof task.description);
           console.log('📝 Description length:', task.description?.length);
           setSelectedTask(task);
+          setShowFutureTasks(false); // Hide future tasks when selecting a regular task
         }}
         selectedTask={selectedTask}
         onLogout={() => {
@@ -231,6 +239,7 @@ const ResponsiveDashboard = () => {
           setShowDeleteConfirm(true);
           setSelectedTask(tasks.find(task => task.id === id));
         }}
+        onShowFutureTasks={handleShowFutureTasks}
       />
 
       {/* Desktop Sidebar */}
@@ -242,6 +251,7 @@ const ResponsiveDashboard = () => {
           console.log('📝 Description type:', typeof task.description);
           console.log('📝 Description length:', task.description?.length);
           setSelectedTask(task);
+          setShowFutureTasks(false); // Hide future tasks when selecting a regular task
         }}
         selectedTask={selectedTask}
         onLogout={() => {
@@ -256,11 +266,12 @@ const ResponsiveDashboard = () => {
           setShowDeleteConfirm(true);
           setSelectedTask(tasks.find(task => task.id === id));
         }}
+        onShowFutureTasks={handleShowFutureTasks}
       />
 
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto lg:mt-0 mt-16">
+      <div className="flex-1 overflow-y-auto lg:mt-0 mt-16 h-screen">
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 lg:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -304,8 +315,13 @@ const ResponsiveDashboard = () => {
             </div>
           </LazyLoadWrapper>
 
+          {/* Future Tasks Section */}
+          {showFutureTasks && (
+            <FutureTasks />
+          )}
+
           {/* Task Details */}
-          {selectedTask ? (
+          {selectedTask && !showFutureTasks ? (
             <LazyLoadWrapper>
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 lg:p-6">
@@ -457,7 +473,7 @@ const ResponsiveDashboard = () => {
               </div>
               </div>
             </LazyLoadWrapper>
-          ) : (
+          ) : !showFutureTasks ? (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
               <div className="text-6xl mb-4">📋</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a Task</h3>
@@ -471,7 +487,7 @@ const ResponsiveDashboard = () => {
                 <span className="sm:hidden">Create Task</span>
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 

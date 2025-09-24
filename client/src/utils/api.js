@@ -75,6 +75,14 @@ export const tasksAPI = {
   getTemplates: () => api.get('/tasks/templates'),
 };
 
+export const futureTasksAPI = {
+  getFutureTasks: () => api.get('/future-tasks'),
+  createFutureTask: (futureTaskData) => api.post('/future-tasks', futureTaskData),
+  updateFutureTask: (id, futureTaskData) => api.put(`/future-tasks/${id}`, futureTaskData),
+  deleteFutureTask: (id) => api.delete(`/future-tasks/${id}`),
+  toggleFutureTask: (id) => api.patch(`/future-tasks/${id}/toggle`),
+};
+
 // Reports API
 export const reportsAPI = {
   getDashboard: (params) => api.get('/reports/dashboard', { params }),

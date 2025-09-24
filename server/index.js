@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
 const reportRoutes = require('./routes/reports');
 const notificationRoutes = require('./routes/notifications');
+const futureTaskRoutes = require('./routes/futureTasks');
 const cronJobs = require('./utils/cronJobs');
 
 const app = express();
@@ -82,6 +83,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/future-tasks', futureTaskRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
