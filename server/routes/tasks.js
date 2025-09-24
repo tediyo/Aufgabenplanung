@@ -138,6 +138,7 @@ router.post('/', auth, [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Task creation validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -157,6 +158,12 @@ router.post('/', auth, [
       notifications = {},
       parentTask
     } = req.body;
+
+    console.log('📥 Server received task data:', req.body);
+    console.log('📝 Description received:', description);
+    console.log('📝 Description type:', typeof description);
+    console.log('👤 User object:', req.user);
+    console.log('👤 User ID:', req.user._id);
 
     // Validate date range
     const start = new Date(startDate);
@@ -191,26 +198,47 @@ router.post('/', auth, [
     });
 
     console.log('💾 Saving task to database...');
-    await task.save();
-    console.log('✅ Task saved successfully with ID:', task._id);
+    console.log('📝 Task description before save:', task.description);
+    try {
+      await task.save();
+      console.log('✅ Task saved successfully with ID:', task._id);
+      console.log('📝 Task description after save:', task.description);
+    } catch (saveError) {
+      console.error('❌ Database save error:', saveError);
+      throw saveError;
+    }
 
     // Send immediate task creation notification (non-blocking)
     console.log('📧 Sending task creation notification...');
-    sendImmediateTaskCreationNotification(task, req.user).catch(error => {
-      console.error('Failed to send task creation notification:', error);
-    });
+    try {
+      await sendImmediateTaskCreationNotification(task, req.user);
+      console.log('✅ Task creation notification sent successfully');
+    } catch (notificationError) {
+      console.error('❌ Failed to send task creation notification:', notificationError);
+      // Don't throw here - notification failure shouldn't prevent task creation
+    }
 
     // Create scheduled notifications for the task (non-blocking)
     console.log('📅 Creating scheduled notifications...');
-    createTaskNotifications(task, req.user).catch(error => {
-      console.error('Failed to create task notifications:', error);
-    });
+    try {
+      await createTaskNotifications(task, req.user);
+      console.log('✅ Scheduled notifications created successfully');
+    } catch (notificationError) {
+      console.error('❌ Failed to create task notifications:', notificationError);
+      // Don't throw here - notification failure shouldn't prevent task creation
+    }
 
     // If this is a subtask, add it to parent task
     if (parentTask) {
-      await Task.findByIdAndUpdate(parentTask, {
-        $push: { subtasks: task._id }
-      });
+      try {
+        await Task.findByIdAndUpdate(parentTask, {
+          $push: { subtasks: task._id }
+        });
+        console.log('✅ Subtask added to parent task');
+      } catch (parentError) {
+        console.error('❌ Failed to add subtask to parent:', parentError);
+        // Don't throw here - parent task update failure shouldn't prevent task creation
+      }
     }
 
     res.status(201).json({
@@ -218,8 +246,12 @@ router.post('/', auth, [
       task
     });
   } catch (error) {
-    console.error('Create task error:', error);
-    res.status(500).json({ message: 'Server error while creating task' });
+    console.error('❌ Create task error:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Server error while creating task',
+      error: error.message 
+    });
   }
 });
 

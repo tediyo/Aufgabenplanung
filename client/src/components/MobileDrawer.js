@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Menu, Search, LogOut, Trash2 } from 'lucide-react';
+import { X, Menu, Search, LogOut, Trash2, User } from 'lucide-react';
 import Logo from './Logo';
 
 const MobileDrawer = ({ 
@@ -194,12 +194,22 @@ const MobileDrawer = ({
           </div>
         </div>
 
-        {/* Logout Button */}
-        <div className="p-4 border-t border-gray-700">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg hover:from-orange-600 hover:to-yellow-500 transition-all"
-        >
+        {/* Profile and Logout Buttons */}
+        <div className="p-4 border-t border-gray-700 space-y-2">
+          <button
+            onClick={() => {
+              onClose();
+              window.location.href = '/profile';
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all"
+          >
+            <User className="w-4 h-4" />
+            Profile
+          </button>
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg hover:from-orange-600 hover:to-yellow-500 transition-all"
+          >
             <LogOut className="w-4 h-4" />
             Logout
           </button>

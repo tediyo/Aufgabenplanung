@@ -5,6 +5,7 @@ import NotificationModal from './components/NotificationModal';
 import Logo from './components/Logo';
 import GoogleLoginButton from './components/GoogleLoginButtonReal';
 import GoogleCallback from './pages/GoogleCallback';
+import Profile from './pages/Profile';
 import './utils/responsiveTest'; // Import responsive test utilities
 
 // Error Boundary Component
@@ -352,6 +353,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<ResponsiveDashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route path="*" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
         </Routes>
