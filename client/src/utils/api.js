@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use environment variable for API URL, fallback to relative path for development (uses proxy)
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+// Use environment variable for API URL, fallback to production URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://aufgabenplanung.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
