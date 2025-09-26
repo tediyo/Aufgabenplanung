@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
   preferences: {
     emailNotifications: {
       type: Boolean,
-      default: true
+      default: false
     },
     reminderTime: {
       type: String,
