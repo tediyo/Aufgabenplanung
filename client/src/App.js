@@ -62,7 +62,7 @@ const Login = () => {
       try {
         
         // Call the server API for login
-        const response = await fetch('http://localhost:5000/api/auth/login', {
+        const response = await fetch('https://aufgabenplanung.onrender.com/api/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -239,7 +239,7 @@ const RegisterPage = () => {
     try {
       
       // Test server connectivity first
-      const testResponse = await fetch('http://localhost:5000/api/auth/register', {
+      const testResponse = await fetch('https://aufgabenplanung.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
