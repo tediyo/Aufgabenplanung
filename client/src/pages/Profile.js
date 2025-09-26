@@ -527,41 +527,43 @@ const Profile = () => {
                {/* Email Notifications Toggle */}
                <div className="p-4 sm:p-6">
                  <div className="border border-gray-200 rounded-lg p-4">
-                   <div className="flex items-center justify-between">
-                     <div className="flex items-center gap-3">
-                       <div className="p-2 bg-blue-100 rounded-lg">
+                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                     <div className="flex items-center gap-3 flex-1">
+                       <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
                          {emailNotifications ? (
                            <Bell className="w-5 h-5 text-blue-600" />
                          ) : (
                            <BellOff className="w-5 h-5 text-gray-400" />
                          )}
                        </div>
-                       <div>
-                       <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Email Notifications</h2>
-                         <p className="text-sm text-gray-600">
+                       <div className="flex-1 min-w-0">
+                         <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Email Notifications</h2>
+                         <p className="text-sm text-gray-600 mt-1">
                            Receive email notifications for task updates, reminders, and summaries
                          </p>
                        </div>
                      </div>
-                     <button
-                       onClick={handleEmailNotificationToggle}
-                       disabled={savingPreferences}
-                       className={`
-                         relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-in-out shadow-inner
-                         ${emailNotifications 
-                           ? 'bg-gradient-to-r from-green-400 to-blue-500 shadow-green-200' 
-                           : 'bg-gradient-to-r from-gray-300 to-gray-400 shadow-gray-200'
-                         }
-                         ${savingPreferences ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
-                       `}
-                     >
-                       <span
+                     <div className="flex justify-end sm:justify-start">
+                       <button
+                         onClick={handleEmailNotificationToggle}
+                         disabled={savingPreferences}
                          className={`
-                           inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-all duration-300 ease-in-out
-                           ${emailNotifications ? 'translate-x-6 shadow-green-300' : 'translate-x-1 shadow-gray-300'}
+                           relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-in-out shadow-inner flex-shrink-0
+                           ${emailNotifications 
+                             ? 'bg-gradient-to-r from-green-400 to-blue-500 shadow-green-200' 
+                             : 'bg-gradient-to-r from-gray-300 to-gray-400 shadow-gray-200'
+                           }
+                           ${savingPreferences ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
                          `}
-                       />
-                     </button>
+                       >
+                         <span
+                           className={`
+                             inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-all duration-300 ease-in-out
+                             ${emailNotifications ? 'translate-x-6 shadow-green-300' : 'translate-x-1 shadow-gray-300'}
+                           `}
+                         />
+                       </button>
+                     </div>
                    </div>
                    
                    {/* Notification Types Info */}
