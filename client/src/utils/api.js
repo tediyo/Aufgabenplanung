@@ -18,11 +18,17 @@ api.interceptors.request.use(
   (config) => {
     // Add authentication token from sessionStorage
     const token = sessionStorage.getItem('authToken');
+    const userEmail = sessionStorage.getItem('userEmail');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('🔑 Added auth token to request');
     } else {
       console.log('⚠️ No auth token found in sessionStorage');
+      // Fallback demo auth via email header (server supports this in dev)
+      if (userEmail) {
+        config.headers['X-User-Email'] = userEmail;
+        console.log('📧 Using X-User-Email fallback header:', userEmail);
+      }
     }
     
     console.log('📡 API Request:', config.method?.toUpperCase(), config.url);
@@ -45,11 +51,10 @@ api.interceptors.response.use(
   (error) => {
     console.log('❌ API Error:', error.response?.status, error.config?.url, error.message);
     
-    // Handle 401 Unauthorized errors
+    // Handle 401 Unauthorized errors without immediate redirect
     if (error.response?.status === 401) {
-      console.log('🔒 Unauthorized access - redirecting to login');
-      sessionStorage.removeItem('authToken');
-      window.location.href = '/login';
+      console.log('🔒 Unauthorized response received; preserving session and returning error');
+      // Do not clear session or redirect automatically to avoid bounce loop
     }
     
     return Promise.reject(error);

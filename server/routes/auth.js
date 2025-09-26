@@ -9,7 +9,8 @@ const router = express.Router();
 
 // Generate JWT token
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-here-change-this-in-production';
+  return jwt.sign({ userId }, jwtSecret, { expiresIn: '7d' });
 };
 
 // @route   POST /api/auth/register
