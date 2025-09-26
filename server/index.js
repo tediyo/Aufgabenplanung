@@ -3,7 +3,14 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Debug environment variables
+console.log('🔍 Environment Variables Debug:');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Not set');
+console.log('PORT:', process.env.PORT);
 
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
@@ -67,7 +74,9 @@ const mongoOptions = {
   socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
 };
 
-mongoose.connect(process.env.MONGODB_URI, mongoOptions)
+const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://thedron16:ttbbss@cluster0.axrxib5.mongodb.net/task-scheduler?retryWrites=true&w=majority&appName=Cluster0';
+console.log('🔗 Connecting to MongoDB with URI:', mongoURI ? 'Set' : 'Not set');
+mongoose.connect(mongoURI, mongoOptions)
 .then(() => {
   console.log('✅ MongoDB connected successfully');
   console.log('📍 Database:', mongoose.connection.db.databaseName);

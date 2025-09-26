@@ -9,7 +9,8 @@ const router = express.Router();
 
 // Generate JWT token
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-here-change-this-in-production';
+  return jwt.sign({ userId }, jwtSecret, { expiresIn: '7d' });
 };
 
 // @route   POST /api/auth/register
@@ -337,6 +338,41 @@ router.post('/google', async (req, res) => {
       message: 'Server error during Google authentication',
       error: error.message 
     });
+  }
+});
+
+// @route   PUT /api/auth/preferences
+// @desc    Update user preferences (including email notifications)
+// @access  Private
+router.put('/preferences', auth, async (req, res) => {
+  try {
+    const { emailNotifications, reminderTime, timezone } = req.body;
+    
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update preferences
+    if (emailNotifications !== undefined) {
+      user.preferences.emailNotifications = emailNotifications;
+    }
+    if (reminderTime) {
+      user.preferences.reminderTime = reminderTime;
+    }
+    if (timezone) {
+      user.preferences.timezone = timezone;
+    }
+
+    await user.save();
+
+    res.json({
+      message: 'Preferences updated successfully',
+      preferences: user.preferences
+    });
+  } catch (error) {
+    console.error('Update preferences error:', error);
+    res.status(500).json({ message: 'Server error during preferences update' });
   }
 });
 

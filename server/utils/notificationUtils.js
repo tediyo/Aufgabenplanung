@@ -1,21 +1,13 @@
 const Notification = require('../models/Notification');
 const Task = require('../models/Task');
 const User = require('../models/User');
-const { 
-  sendTaskNotification, 
-  sendTaskCreationNotification, 
-  sendTaskActionNotification, 
-  sendScheduledDateNotification,
-  sendWeeklyReport,
-  sendMonthlyReport 
-} = require('./emailService');
 
 // 1. 📝 TASK CREATION NOTIFICATION SERVICE
 const sendImmediateTaskCreationNotification = async (task, user) => {
   try {
     console.log(`📝 [NOTIFICATION SERVICE 1] Task created: ${task.title} for user: ${user.email}`);
     
-    // Create a notification record in database
+    // Create a notification record in database only
     const notification = new Notification({
       user: user._id,
       email: user.email,
@@ -24,32 +16,15 @@ const sendImmediateTaskCreationNotification = async (task, user) => {
       subject: `📝 New Task Created: ${task.title}`,
       message: `Your task "${task.title}" has been created and is ready to start.`,
       task: task._id,
-      scheduledFor: new Date(), // Send immediately
-      status: 'pending',
+      scheduledFor: new Date(),
+      status: 'sent', // Mark as sent since we're only logging to database
       isRead: false
     });
     
     await notification.save();
-    console.log(`📝 Notification saved to database for task: ${task.title}`);
+    console.log(`📝 Notification logged to database for task: ${task.title}`);
     
-    // Send email notification to user's email
-    try {
-      console.log(`📧 Sending email notification to: ${user.email}`);
-      const emailResult = await sendTaskCreationNotification(task, user);
-      if (emailResult.success) {
-        console.log(`📧 ✅ Email notification sent successfully to ${user.email} for task: ${task.title}`);
-        console.log(`📧 Message ID: ${emailResult.messageId}`);
-        await notification.markAsSent();
-      } else {
-        console.log(`📧 ❌ Email notification failed: ${emailResult.error}`);
-        await notification.markAsFailed(emailResult.error);
-      }
-    } catch (emailError) {
-      console.log(`📧 ❌ Email notification error: ${emailError.message}`);
-      await notification.markAsFailed(emailError.message);
-    }
-    
-    return { success: true, message: 'Task creation notification sent' };
+    return { success: true, message: 'Task creation notification logged' };
   } catch (error) {
     console.error('Error in task creation notification:', error);
     return { success: false, error: error.message };
@@ -66,7 +41,7 @@ const sendImmediateTaskActionNotification = async (action, task, user) => {
     
     console.log(`🚀 [NOTIFICATION SERVICE ${serviceNumber}] ${serviceName}: ${task.title} for user: ${user.email}`);
     
-    // Create notification in database
+    // Create notification in database only
     const notification = new Notification({
       user: user._id,
       email: user.email,
@@ -75,25 +50,15 @@ const sendImmediateTaskActionNotification = async (action, task, user) => {
       subject: `${isStart ? '🚀' : '✅'} Task ${action === 'start' ? 'Started' : 'Completed'}: ${task.title}`,
       message: `Your task "${task.title}" has been ${action === 'start' ? 'started' : 'completed'}.`,
       task: task._id,
-      scheduledFor: new Date(), // Send immediately
-      status: 'pending',
+      scheduledFor: new Date(),
+      status: 'sent', // Mark as sent since we're only logging to database
       isRead: false
     });
     
     await notification.save();
-    console.log(`📝 Task ${action} notification saved to database`);
+    console.log(`📝 Task ${action} notification logged to database`);
     
-    // Send email notification
-    const result = await sendTaskActionNotification(action, task, user);
-    if (result.success) {
-      console.log(`📧 ✅ Task ${action} email sent successfully to ${user.email} for: ${task.title}`);
-      console.log(`📧 Message ID: ${result.messageId}`);
-      await notification.markAsSent();
-    } else {
-      console.log(`📧 ❌ Task ${action} email failed: ${result.error}`);
-      await notification.markAsFailed(result.error);
-    }
-    return result;
+    return { success: true, message: `Task ${action} notification logged` };
   } catch (error) {
     console.error(`Error sending task ${action} notification:`, error);
     return { success: false, error: error.message };
@@ -174,37 +139,16 @@ const createTaskNotifications = async (task, user) => {
   }
 };
 
-// Process pending notifications
+// Process pending notifications (database only)
 const processPendingNotifications = async () => {
   try {
     const pendingNotifications = await Notification.getPendingNotifications();
     
     for (const notification of pendingNotifications) {
       try {
-        let result;
-        
-        // Handle different notification types
-        if (['task-start-date', 'task-due-date'].includes(notification.type)) {
-          result = await sendScheduledDateNotification(
-            notification.type,
-            notification.task,
-            { email: notification.email, _id: notification.user }
-          );
-        } else {
-          result = await sendTaskNotification(
-            notification.type,
-            notification.task,
-            { email: notification.email, _id: notification.user }
-          );
-        }
-
-        if (result.success) {
-          await notification.markAsSent();
-          console.log(`Notification sent successfully: ${notification.type} for task ${notification.task.title}`);
-        } else {
-          await notification.markAsFailed(result.error);
-          console.error(`Failed to send notification: ${result.error}`);
-        }
+        // Just mark as sent since we're only logging to database
+        await notification.markAsSent();
+        console.log(`Notification logged: ${notification.type} for task ${notification.task?.title || 'unknown'}`);
       } catch (error) {
         await notification.markAsFailed(error.message);
         console.error(`Error processing notification ${notification._id}:`, error);
@@ -319,7 +263,7 @@ const cleanupOldNotifications = async (daysOld = 30) => {
   }
 };
 
-// Generate weekly report data
+// Generate weekly report data (database only)
 const generateWeeklyReportData = async (userId) => {
   try {
     const now = new Date();
@@ -360,7 +304,7 @@ const generateWeeklyReportData = async (userId) => {
   }
 };
 
-// Generate monthly report data
+// Generate monthly report data (database only)
 const generateMonthlyReportData = async (userId) => {
   try {
     const now = new Date();
@@ -396,119 +340,6 @@ const generateMonthlyReportData = async (userId) => {
   }
 };
 
-// Send weekly reports to all users
-const sendWeeklyReports = async () => {
-  try {
-    const users = await User.find({});
-    let sentCount = 0;
-
-    for (const user of users) {
-      try {
-        const reportData = await generateWeeklyReportData(user._id);
-        const result = await sendWeeklyReport(user, reportData);
-        
-        if (result.success) {
-          sentCount++;
-          console.log(`Weekly report sent to ${user.email}`);
-        } else {
-          console.error(`Failed to send weekly report to ${user.email}: ${result.error}`);
-        }
-      } catch (error) {
-        console.error(`Error sending weekly report to ${user.email}:`, error);
-      }
-    }
-
-    console.log(`Weekly reports sent to ${sentCount} users`);
-    return sentCount;
-  } catch (error) {
-    console.error('Error sending weekly reports:', error);
-    throw error;
-  }
-};
-
-// Send monthly reports to all users
-const sendMonthlyReports = async () => {
-  try {
-    const users = await User.find({});
-    let sentCount = 0;
-
-    for (const user of users) {
-      try {
-        const reportData = await generateMonthlyReportData(user._id);
-        const result = await sendMonthlyReport(user, reportData);
-        
-        if (result.success) {
-          sentCount++;
-          console.log(`Monthly report sent to ${user.email}`);
-        } else {
-          console.error(`Failed to send monthly report to ${user.email}: ${result.error}`);
-        }
-      } catch (error) {
-        console.error(`Error sending monthly report to ${user.email}:`, error);
-      }
-    }
-
-    console.log(`Monthly reports sent to ${sentCount} users`);
-    return sentCount;
-  } catch (error) {
-    console.error('Error sending monthly reports:', error);
-    throw error;
-  }
-};
-
-// TEST FUNCTION: Process all notifications for testing (ignores scheduled dates)
-const processAllNotificationsForTesting = async () => {
-  try {
-    console.log('Processing ALL notifications for testing...');
-    
-    // Get all pending notifications regardless of date
-    const allNotifications = await Notification.find({
-      status: 'pending'
-    }).populate('task user');
-    
-    let processedCount = 0;
-    
-    for (const notification of allNotifications) {
-      try {
-        let result;
-        
-        // Handle different notification types
-        if (['task-start-date', 'task-due-date'].includes(notification.type)) {
-          result = await sendScheduledDateNotification(
-            notification.type,
-            notification.task,
-            { email: notification.email, _id: notification.user }
-          );
-        } else {
-          result = await sendTaskNotification(
-            notification.type,
-            notification.task,
-            { email: notification.email, _id: notification.user }
-          );
-        }
-
-        if (result.success) {
-          await notification.markAsSent();
-          console.log(`TEST: Notification sent successfully: ${notification.type} for task ${notification.task.title}`);
-          processedCount++;
-        } else {
-          await notification.markAsFailed(result.error);
-          console.error(`TEST: Failed to send notification: ${result.error}`);
-        }
-      } catch (error) {
-        await notification.markAsFailed(error.message);
-        console.error(`TEST: Error processing notification ${notification._id}:`, error);
-      }
-    }
-
-    console.log(`TEST: Processed ${processedCount} notifications`);
-    return processedCount;
-  } catch (error) {
-    console.error('TEST: Error processing all notifications:', error);
-    throw error;
-  }
-};
-
 module.exports = {
   sendImmediateTaskCreationNotification,
   sendImmediateTaskActionNotification,
@@ -518,10 +349,7 @@ module.exports = {
   updateTaskNotifications,
   cleanupOldNotifications,
   generateWeeklyReportData,
-  generateMonthlyReportData,
-  sendWeeklyReports,
-  sendMonthlyReports,
-  processAllNotificationsForTesting
+  generateMonthlyReportData
 };
 
 

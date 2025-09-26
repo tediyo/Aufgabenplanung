@@ -90,8 +90,11 @@ const GoogleCallback = () => {
           isGoogleUser: data.user.isGoogleUser
         };
 
-        // Store token in sessionStorage for this session only
+        // Store token and user email in sessionStorage for this session only
         sessionStorage.setItem('authToken', data.token);
+        if (data?.user?.email) {
+          sessionStorage.setItem('userEmail', data.user.email);
+        }
         console.log('📝 Google OAuth successful for user:', data.user.email);
 
         console.log('Mobile OAuth Success:', {

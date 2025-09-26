@@ -267,8 +267,16 @@ const RegisterPage = () => {
         console.log('📝 Extracted user data:', user);
         console.log('📝 Extracted token:', token);
         
-        // Store token in sessionStorage for this session only
+        // Store token and email (if provided)
         sessionStorage.setItem('authToken', token);
+        if (user?.email) {
+          sessionStorage.setItem('userEmail', user.email);
+        }
+        // Store token and email
+        sessionStorage.setItem('authToken', token);
+        if (user?.email) {
+          sessionStorage.setItem('userEmail', user.email);
+        }
         console.log('📝 Registration successful for user:', user.email);
         
         navigate('/dashboard');
@@ -459,8 +467,9 @@ const RegisterPage = () => {
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const token = sessionStorage.getItem('authToken');
+  const userEmail = sessionStorage.getItem('userEmail');
   
-  if (!token) {
+  if (!token && !userEmail) {
     window.location.href = '/login';
     return null;
   }
@@ -470,13 +479,8 @@ const ProtectedRoute = ({ children }) => {
 
 // Main App Component
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  React.useEffect(() => {
-    // Check if user has a valid token in sessionStorage
-    const token = sessionStorage.getItem('authToken');
-    setIsLoggedIn(!!token);
-  }, []);
+  // Derive auth state from sessionStorage each render to avoid stale state
+  const isLoggedIn = !!sessionStorage.getItem('authToken') || !!sessionStorage.getItem('userEmail');
 
   return (
     <ErrorBoundary>

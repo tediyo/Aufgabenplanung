@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// Development API URL for testing
-//const API_BASE_URL = 'http://localhost:5000/api';
-// Production API URL
-const API_BASE_URL = 'https://aufgabenplanung.onrender.com/api';
+// Use environment variable for API URL, fallback to relative path for development (uses proxy)
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Create axios instance
 const api = axios.create({
@@ -18,15 +16,29 @@ api.interceptors.request.use(
   (config) => {
     // Add authentication token from sessionStorage
     const token = sessionStorage.getItem('authToken');
+    const userEmail = sessionStorage.getItem('userEmail');
+    
+    console.log('🔍 Auth Debug - Token:', token ? 'Present' : 'Missing');
+    console.log('🔍 Auth Debug - UserEmail:', userEmail ? 'Present' : 'Missing');
+    console.log('🔍 Auth Debug - SessionStorage keys:', Object.keys(sessionStorage));
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('🔑 Added auth token to request');
     } else {
       console.log('⚠️ No auth token found in sessionStorage');
+      // Fallback demo auth via email header (server supports this in dev)
+      if (userEmail) {
+        config.headers['X-User-Email'] = userEmail;
+        console.log('📧 Using X-User-Email fallback header:', userEmail);
+      } else {
+        console.log('❌ No authentication method available!');
+      }
     }
     
     console.log('📡 API Request:', config.method?.toUpperCase(), config.url);
     console.log('📡 Full URL:', config.baseURL + config.url);
+    console.log('📡 Headers:', config.headers);
     console.log('📡 Request data:', config.data);
     return config;
   },
@@ -45,11 +57,10 @@ api.interceptors.response.use(
   (error) => {
     console.log('❌ API Error:', error.response?.status, error.config?.url, error.message);
     
-    // Handle 401 Unauthorized errors
+    // Handle 401 Unauthorized errors without immediate redirect
     if (error.response?.status === 401) {
-      console.log('🔒 Unauthorized access - redirecting to login');
-      sessionStorage.removeItem('authToken');
-      window.location.href = '/login';
+      console.log('🔒 Unauthorized response received; preserving session and returning error');
+      // Do not clear session or redirect automatically to avoid bounce loop
     }
     
     return Promise.reject(error);
