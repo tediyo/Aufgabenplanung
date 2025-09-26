@@ -239,6 +239,9 @@ const RegisterPage = () => {
     try {
       
       // Test server connectivity first
+
+      console.log('🔍 Testing server connectivity...');
+
       const testResponse = await fetch('https://aufgabenplanung.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {

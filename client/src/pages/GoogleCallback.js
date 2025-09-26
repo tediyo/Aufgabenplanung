@@ -29,9 +29,16 @@ const GoogleCallback = () => {
         // Send code to server for processing
         console.log('Sending code to server:', code);
         
-        // Use production API endpoint
-        const apiUrls = ['https://aufgabenplanung.onrender.com/api/auth/google'];
-        
+
+        // Try multiple API endpoints for production
+        const apiUrls = process.env.NODE_ENV === 'production' 
+          ? [
+              'https://aufgabenplanung.onrender.com/api/auth/google',
+              'https://aufgabenplanung-server.onrender.com/api/auth/google',
+              'https://aufgabenplanung-backend.onrender.com/api/auth/google'
+            ]
+          : ['https://aufgabenplanung.onrender.com/api/auth/google'];
+
         let response;
         let lastError;
         
