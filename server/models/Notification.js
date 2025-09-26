@@ -12,7 +12,9 @@ const notificationSchema = new mongoose.Schema({
       'task-reminder',     // Before the due date (configurable)
       'task-overdue',      // For tasks past their due date
       'task-start-date',   // On the task's start date
-      'task-due-date'      // On the task's due date (alternative)
+      'task-due-date',     // On the task's due date (alternative)
+      'weekly-summary',    // Weekly productivity summary
+      'monthly-summary'    // Monthly productivity summary
     ]
   },
   task: {

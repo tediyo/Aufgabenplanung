@@ -188,11 +188,38 @@ const sendWeeklySummaryEmail = async (user, summaryData) => {
   );
 };
 
+// Send monthly summary email
+const sendMonthlySummaryEmail = async (user, summaryData) => {
+  const data = {
+    userName: user.name || user.email.split('@')[0],
+    monthName: summaryData.monthName,
+    year: summaryData.year,
+    totalTasks: summaryData.totalTasks,
+    completedTasks: summaryData.completedTasks,
+    pendingTasks: summaryData.pendingTasks,
+    overdueTasks: summaryData.overdueTasks,
+    completionRate: summaryData.completionRate,
+    mostProductiveDay: summaryData.mostProductiveDay,
+    avgTasksPerDay: summaryData.avgTasksPerDay,
+    longestStreak: summaryData.longestStreak,
+    categoriesUsed: summaryData.categoriesUsed,
+    appUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
+  };
+
+  return await sendEmail(
+    user.email,
+    `Monthly Task Summary - ${summaryData.monthName} ${summaryData.year}`,
+    'monthly-summary',
+    data
+  );
+};
+
 module.exports = {
   sendEmail,
   sendTaskCreationEmail,
   sendTaskReminderEmail,
   sendTaskCompletionEmail,
   sendTaskOverdueEmail,
-  sendWeeklySummaryEmail
+  sendWeeklySummaryEmail,
+  sendMonthlySummaryEmail
 };

@@ -5,7 +5,8 @@ const Notification = require('../models/Notification');
 const { 
   sendTaskReminderEmail, 
   sendTaskOverdueEmail, 
-  sendWeeklySummaryEmail 
+  sendWeeklySummaryEmail,
+  sendMonthlySummaryEmail 
 } = require('../utils/sendEmail');
 
 class EmailScheduler {
@@ -32,6 +33,9 @@ class EmailScheduler {
 
     // Schedule weekly summaries (Monday 8 AM)
     this.scheduleJob('weekly-summaries', '0 8 * * 1', this.sendWeeklySummaries.bind(this));
+
+    // Schedule monthly summaries (1st of every month at 9 AM)
+    this.scheduleJob('monthly-summaries', '0 9 1 * *', this.sendMonthlySummaries.bind(this));
 
     console.log('✅ Email scheduler started successfully');
   }
@@ -227,6 +231,93 @@ class EmailScheduler {
       }
     } catch (error) {
       console.error('❌ Error in weekly summaries job:', error);
+    }
+  }
+
+  // Send monthly summaries
+  async sendMonthlySummaries() {
+    console.log('📧 Running monthly summaries job...');
+    
+    try {
+      const today = new Date();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      // Get all users who have email notifications enabled
+      const users = await User.find({
+        'preferences.emailNotifications': { $ne: false }
+      });
+
+      console.log(`📧 Sending monthly summaries to ${users.length} users`);
+
+      for (const user of users) {
+        try {
+          // Get user's tasks for the month
+          const tasks = await Task.find({
+            user: user._id,
+            createdAt: { $gte: monthStart, $lte: monthEnd }
+          });
+
+          // Calculate monthly summary data
+          const completedTasks = tasks.filter(t => t.status === 'done');
+          const pendingTasks = tasks.filter(t => ['todo', 'in-progress'].includes(t.status));
+          const overdueTasks = tasks.filter(t => t.status !== 'done' && t.endDate < today);
+
+          // Calculate additional metrics
+          const categories = [...new Set(tasks.map(t => t.category))];
+          const avgTasksPerDay = Math.round((tasks.length / monthEnd.getDate()) * 10) / 10;
+          
+          // Find most productive day (simplified - just count tasks by day)
+          const tasksByDay = {};
+          tasks.forEach(task => {
+            const day = task.createdAt.toDateString();
+            tasksByDay[day] = (tasksByDay[day] || 0) + 1;
+          });
+          const mostProductiveDay = Object.keys(tasksByDay).reduce((a, b) => 
+            tasksByDay[a] > tasksByDay[b] ? a : b, 'No tasks'
+          );
+
+          const summaryData = {
+            monthName: monthStart.toLocaleDateString('en-US', { month: 'long' }),
+            year: monthStart.getFullYear(),
+            totalTasks: tasks.length,
+            completedTasks: completedTasks.length,
+            pendingTasks: pendingTasks.length,
+            overdueTasks: overdueTasks.length,
+            mostProductiveDay: mostProductiveDay,
+            avgTasksPerDay: avgTasksPerDay,
+            longestStreak: 7, // Simplified - could be calculated from task completion dates
+            categoriesUsed: categories.length
+          };
+
+          summaryData.completionRate = summaryData.totalTasks > 0 
+            ? Math.round((summaryData.completedTasks / summaryData.totalTasks) * 100)
+            : 0;
+
+          // Only send if user has tasks
+          if (summaryData.totalTasks > 0) {
+            await sendMonthlySummaryEmail(user, summaryData);
+            
+            // Log notification in database
+            await this.logNotification(user._id, null, 'monthly-summary', {
+              sent: true,
+              summaryData
+            });
+
+            console.log(`📧 Sent monthly summary to: ${user.email}`);
+          }
+        } catch (error) {
+          console.error(`❌ Error sending monthly summary to user ${user._id}:`, error);
+          
+          // Log failed notification
+          await this.logNotification(user._id, null, 'monthly-summary', {
+            sent: false,
+            error: error.message
+          });
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error in monthly summaries job:', error);
     }
   }
 
