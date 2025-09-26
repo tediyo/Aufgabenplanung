@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Overdue</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #ef4444;
+        }
+        .header h1 {
+            color: #ef4444;
+            margin: 0;
+            font-size: 28px;
+        }
+        .overdue-badge {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .task-info {
+            background-color: #fef2f2;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ef4444;
+        }
+        .task-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 10px;
+        }
+        .overdue-info {
+            background-color: #fef2f2;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px solid #fecaca;
+        }
+        .days-overdue {
+            font-size: 24px;
+            color: #dc2626;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Task Overdue</h1>
+            <p>Hello {{userName}}, you have an overdue task that needs attention!</p>
+        </div>
+
+        <div style="text-align: center;">
+            <span class="overdue-badge">{{daysOverdue}} days overdue</span>
+        </div>
+
+        <div class="task-info">
+            <div class="task-title">{{taskTitle}}</div>
+            <p style="color: #dc2626; margin: 0;">{{taskDescription}}</p>
+        </div>
+
+        <div class="overdue-info">
+            <div class="days-overdue">{{daysOverdue}} days overdue</div>
+            <p style="color: #991b1b; margin: 0;">Original end date: {{endDate}}</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{appUrl}}/dashboard" class="cta-button">Update Task Status</a>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated notification from Task Manager.</p>
+            <p>Please update the task status or extend the deadline if needed.</p>
+        </div>
+    </div>
+</body>
+</html>

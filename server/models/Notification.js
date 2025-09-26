@@ -47,7 +47,7 @@ const notificationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'sent', 'failed', 'cancelled'],
+    enum: ['pending', 'sent', 'failed', 'cancelled', 'logged'],
     default: 'pending'
   },
   retryCount: {

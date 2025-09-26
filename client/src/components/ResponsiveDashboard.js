@@ -14,7 +14,6 @@ const ResponsiveDashboard = () => {
   
   // Debug authentication info
   const debugAuth = () => {
-    console.log('Auth Debug: No localStorage authentication - using memory only');
   };
   
   const [tasks, setTasks] = useState([]);
@@ -40,7 +39,6 @@ const ResponsiveDashboard = () => {
   const addTask = async (newTask) => {
     try {
       debugAuth();
-      console.log('Creating task:', newTask);
       
       // Prepare task data for server
       const taskData = {
@@ -62,15 +60,10 @@ const ResponsiveDashboard = () => {
         }
       };
 
-      console.log('📝 Original task data from modal:', newTask);
-      console.log('📤 Task data prepared for server:', taskData);
-      console.log('📝 Description value:', newTask.description);
-      console.log('📝 Description in prepared data:', taskData.description);
       
       // Use proper API call
       const result = await tasksAPI.createTask(taskData);
       
-      console.log('Task created successfully:', result);
       // Add to local state with server response
       setTasks([...tasks, { ...newTask, id: result.data.task._id }]);
       
@@ -89,15 +82,11 @@ const ResponsiveDashboard = () => {
   const loadTasks = useCallback(async () => {
     try {
       debugAuth();
-      console.log('Loading tasks from server...');
       const response = await tasksAPI.getTasks();
-      console.log('Loaded tasks from server:', response.data.tasks);
-      console.log('📝 First task description (if exists):', response.data.tasks?.[0]?.description);
       setTasks(response.data.tasks || []);
     } catch (error) {
       console.error('Error loading tasks:', error);
       console.error('Error details:', error.message);
-      console.log('Using empty task list due to error');
       setTasks([]);
     }
   }, []);
@@ -115,9 +104,8 @@ const ResponsiveDashboard = () => {
         progress: newStatus === 'done' ? 100 : tasks.find(t => t._id === id)?.progress || 0
       };
       
-      const result = await tasksAPI.updateTask(id, updateData);
+      await tasksAPI.updateTask(id, updateData);
       
-      console.log('✅ Task updated successfully:', result);
       
       // Update local state with server response
       setTasks(tasks.map(task => 
@@ -153,9 +141,8 @@ const ResponsiveDashboard = () => {
     try {
       debugAuth();
       // Use API call
-      const result = await tasksAPI.deleteTask(id);
+      await tasksAPI.deleteTask(id);
       
-      console.log('✅ Task deleted successfully:', result);
       
       // Update local state
       setTasks(tasks.filter(task => task._id !== id && task.id !== id));
@@ -166,7 +153,6 @@ const ResponsiveDashboard = () => {
       }
       
       setShowDeleteConfirm(false);
-      console.log(`Task deleted successfully!`);
     } catch (error) {
       console.error('❌ Error deleting task:', error);
       console.error('Task deletion failed:', error.message);
@@ -210,16 +196,11 @@ const ResponsiveDashboard = () => {
         onClose={() => setIsDrawerOpen(!isDrawerOpen)}
         tasks={tasks}
         onTaskSelect={(task) => {
-          console.log('📝 Selected task:', task);
-          console.log('📝 Selected task description:', task.description);
-          console.log('📝 Description type:', typeof task.description);
-          console.log('📝 Description length:', task.description?.length);
           setSelectedTask(task);
           setShowFutureTasks(false); // Hide future tasks when selecting a regular task
         }}
         selectedTask={selectedTask}
         onLogout={() => {
-          console.log('🔄 Logging out...');
           // Clear sessionStorage and redirect
           sessionStorage.removeItem('authToken');
           window.location.href = '/login';
@@ -239,16 +220,11 @@ const ResponsiveDashboard = () => {
       <DesktopSidebar
         tasks={tasks}
         onTaskSelect={(task) => {
-          console.log('📝 Selected task:', task);
-          console.log('📝 Selected task description:', task.description);
-          console.log('📝 Description type:', typeof task.description);
-          console.log('📝 Description length:', task.description?.length);
           setSelectedTask(task);
           setShowFutureTasks(false); // Hide future tasks when selecting a regular task
         }}
         selectedTask={selectedTask}
         onLogout={() => {
-          console.log('🔄 Logging out...');
           // Clear sessionStorage and redirect
           sessionStorage.removeItem('authToken');
           window.location.href = '/login';

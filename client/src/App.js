@@ -3,11 +3,10 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import ResponsiveDashboard from './components/ResponsiveDashboard';
 import NotificationModal from './components/NotificationModal';
 import Logo from './components/Logo';
-import GoogleLoginButton from './components/GoogleLoginButtonReal';
+import GoogleLoginButton from './components/GoogleLoginButton';
 import GoogleCallback from './pages/GoogleCallback';
 import Profile from './pages/Profile';
 import MiniModal from './components/MiniModal';
-import './utils/responsiveTest'; // Import responsive test utilities
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -61,7 +60,6 @@ const Login = () => {
     if (email && password) {
       setIsLoading(true);
       try {
-        console.log('🔄 Starting login with data:', { email });
         
         // Call the server API for login
         const response = await fetch('http://localhost:5000/api/auth/login', {
@@ -72,17 +70,14 @@ const Login = () => {
           body: JSON.stringify({ email, password })
         });
         
-        console.log('🔍 Login response status:', response.status);
         const data = await response.json();
-        console.log('🔍 Login response data:', data);
         
         if (response.ok) {
-          console.log('✅ Login successful!');
           const { token, user } = data;
           
           // Store token in sessionStorage for this session only
           sessionStorage.setItem('authToken', token);
-          console.log('📝 Login successful for user:', user.email);
+          sessionStorage.setItem('userEmail', user.email);
           
           navigate('/dashboard');
         } else {
@@ -104,10 +99,8 @@ const Login = () => {
 
   const handleGoogleSuccess = (user) => {
     setGoogleLoading(false);
-    console.log('✅ Google login successful:', user);
     
     // No localStorage - user data will be fetched from server when needed
-    console.log('📝 Google login successful for user:', user.email);
     navigate('/dashboard');
   };
 
@@ -244,10 +237,8 @@ const RegisterPage = () => {
 
     setIsLoading(true);
     try {
-      console.log('🔄 Starting registration with data:', formData);
       
       // Test server connectivity first
-      console.log('🔍 Testing server connectivity...');
       const testResponse = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: {
@@ -256,16 +247,10 @@ const RegisterPage = () => {
         body: JSON.stringify(formData)
       });
       
-      console.log('🔍 Test response status:', testResponse.status);
       const testData = await testResponse.json();
-      console.log('🔍 Test response data:', testData);
       
       if (testResponse.ok) {
-        console.log('✅ Direct fetch registration successful!');
-        console.log('📝 Full response data:', testData);
         const { token, user } = testData;
-        console.log('📝 Extracted user data:', user);
-        console.log('📝 Extracted token:', token);
         
         // Store token and email (if provided)
         sessionStorage.setItem('authToken', token);
@@ -277,7 +262,6 @@ const RegisterPage = () => {
         if (user?.email) {
           sessionStorage.setItem('userEmail', user.email);
         }
-        console.log('📝 Registration successful for user:', user.email);
         
         navigate('/dashboard');
       } else {
@@ -317,10 +301,8 @@ const RegisterPage = () => {
 
   const handleGoogleSuccess = (user) => {
     setGoogleLoading(false);
-    console.log('✅ Google login successful:', user);
     
     // No localStorage - user data will be fetched from server when needed
-    console.log('📝 Google login successful for user:', user.email);
     navigate('/dashboard');
   };
 

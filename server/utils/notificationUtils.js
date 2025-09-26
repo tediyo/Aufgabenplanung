@@ -1,13 +1,32 @@
 const Notification = require('../models/Notification');
 const Task = require('../models/Task');
 const User = require('../models/User');
+const { 
+  sendTaskCreationEmail, 
+  sendTaskReminderEmail, 
+  sendTaskCompletionEmail, 
+  sendTaskOverdueEmail 
+} = require('./sendEmail');
 
 // 1. 📝 TASK CREATION NOTIFICATION SERVICE
 const sendImmediateTaskCreationNotification = async (task, user) => {
   try {
     console.log(`📝 [NOTIFICATION SERVICE 1] Task created: ${task.title} for user: ${user.email}`);
     
-    // Create a notification record in database only
+    let emailResult = { success: false, reason: 'Email not configured' };
+    
+    // Try to send email if user has email notifications enabled
+    if (user.preferences?.emailNotifications !== false) {
+      try {
+        emailResult = await sendTaskCreationEmail(user, task);
+        console.log(`📧 Email result for task creation:`, emailResult);
+      } catch (emailError) {
+        console.error('📧 Email sending failed for task creation:', emailError);
+        emailResult = { success: false, error: emailError.message };
+      }
+    }
+    
+    // Always create a notification record in database
     const notification = new Notification({
       user: user._id,
       email: user.email,
@@ -17,14 +36,23 @@ const sendImmediateTaskCreationNotification = async (task, user) => {
       message: `Your task "${task.title}" has been created and is ready to start.`,
       task: task._id,
       scheduledFor: new Date(),
-      status: 'sent', // Mark as sent since we're only logging to database
-      isRead: false
+      status: emailResult.success ? 'sent' : 'logged',
+      isRead: false,
+      metadata: {
+        emailSent: emailResult.success,
+        emailError: emailResult.error || null
+      }
     });
     
     await notification.save();
     console.log(`📝 Notification logged to database for task: ${task.title}`);
     
-    return { success: true, message: 'Task creation notification logged' };
+    return { 
+      success: true, 
+      message: 'Task creation notification processed',
+      emailSent: emailResult.success,
+      emailError: emailResult.error
+    };
   } catch (error) {
     console.error('Error in task creation notification:', error);
     return { success: false, error: error.message };
@@ -41,7 +69,24 @@ const sendImmediateTaskActionNotification = async (action, task, user) => {
     
     console.log(`🚀 [NOTIFICATION SERVICE ${serviceNumber}] ${serviceName}: ${task.title} for user: ${user.email}`);
     
-    // Create notification in database only
+    let emailResult = { success: false, reason: 'Email not configured' };
+    
+    // Try to send email if user has email notifications enabled
+    if (user.preferences?.emailNotifications !== false) {
+      try {
+        if (action === 'finish' || action === 'completed') {
+          emailResult = await sendTaskCompletionEmail(user, task);
+        } else if (action === 'start') {
+          emailResult = await sendTaskReminderEmail(user, task, 'start');
+        }
+        console.log(`📧 Email result for task ${action}:`, emailResult);
+      } catch (emailError) {
+        console.error(`📧 Email sending failed for task ${action}:`, emailError);
+        emailResult = { success: false, error: emailError.message };
+      }
+    }
+    
+    // Always create notification in database
     const notification = new Notification({
       user: user._id,
       email: user.email,
@@ -51,14 +96,23 @@ const sendImmediateTaskActionNotification = async (action, task, user) => {
       message: `Your task "${task.title}" has been ${action === 'start' ? 'started' : 'completed'}.`,
       task: task._id,
       scheduledFor: new Date(),
-      status: 'sent', // Mark as sent since we're only logging to database
-      isRead: false
+      status: emailResult.success ? 'sent' : 'logged',
+      isRead: false,
+      metadata: {
+        emailSent: emailResult.success,
+        emailError: emailResult.error || null
+      }
     });
     
     await notification.save();
     console.log(`📝 Task ${action} notification logged to database`);
     
-    return { success: true, message: `Task ${action} notification logged` };
+    return { 
+      success: true, 
+      message: `Task ${action} notification processed`,
+      emailSent: emailResult.success,
+      emailError: emailResult.error
+    };
   } catch (error) {
     console.error(`Error sending task ${action} notification:`, error);
     return { success: false, error: error.message };

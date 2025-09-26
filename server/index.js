@@ -18,6 +18,7 @@ const reportRoutes = require('./routes/reports');
 const notificationRoutes = require('./routes/notifications');
 const futureTaskRoutes = require('./routes/futureTasks');
 const cronJobs = require('./utils/cronJobs');
+const emailScheduler = require('./jobs/scheduler');
 
 const app = express();
 
@@ -258,5 +259,8 @@ app.listen(PORT, () => {
 
 // Start cron jobs for email notifications
 cronJobs.start();
+
+// Start email scheduler
+emailScheduler.start();
 
 
