@@ -146,22 +146,84 @@ app.get('/api/simple-email-test', async (req, res) => {
   try {
     const nodemailer = require('nodemailer');
     
-    // Test basic email configuration with multiple options
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: 465, // Try port 465 instead of 587
-      secure: true, // true for 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+    // Test multiple SMTP configurations
+    const configs = [
+      // Gmail with port 465 (SSL)
+      {
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        tls: { rejectUnauthorized: false }
       },
-      tls: {
-        rejectUnauthorized: false // Allow self-signed certificates
+      // Gmail with port 587 (TLS)
+      {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        tls: { rejectUnauthorized: false }
       },
-      connectionTimeout: 60000, // 60 seconds
-      greetingTimeout: 30000, // 30 seconds
-      socketTimeout: 60000 // 60 seconds
-    });
+      // Alternative Gmail configuration
+      {
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        tls: { rejectUnauthorized: false }
+      },
+      // Try with different timeout settings
+      {
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 10000,
+        greetingTimeout: 5000,
+        socketTimeout: 10000
+      }
+    ];
+
+    let transporter = null;
+    let lastError = null;
+
+    // Try each configuration
+    for (const config of configs) {
+      try {
+        console.log(`📧 Trying SMTP config: ${config.host || config.service}:${config.port || 'default'}`);
+        transporter = nodemailer.createTransport(config);
+        
+        // Try to send a test email without verification (faster)
+        const testResult = await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: process.env.EMAIL_USER,
+          subject: 'SMTP Test',
+          text: 'Testing SMTP connection'
+        });
+        
+        console.log(`✅ SMTP config successful with: ${config.host || config.service}:${config.port || 'default'}`);
+        break;
+      } catch (error) {
+        console.log(`❌ SMTP config failed: ${config.host || config.service}:${config.port || 'default'} - ${error.message}`);
+        lastError = error;
+        transporter = null;
+      }
+    }
+
+    if (!transporter) {
+      throw new Error(`All SMTP configurations failed. Last error: ${lastError?.message}`);
+    }
     
     const result = await transporter.sendMail({
       from: process.env.EMAIL_USER,
