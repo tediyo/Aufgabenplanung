@@ -30,14 +30,8 @@ const GoogleCallback = () => {
         console.log('Sending code to server:', code);
         
 
-        // Try multiple API endpoints for production
-        const apiUrls = process.env.NODE_ENV === 'production' 
-          ? [
-              'https://aufgabenplanung.onrender.com/api/auth/google',
-              'https://aufgabenplanung-server.onrender.com/api/auth/google',
-              'https://aufgabenplanung-backend.onrender.com/api/auth/google'
-            ]
-          : ['https://aufgabenplanung.onrender.com/api/auth/google'];
+        // Use local development API endpoint
+        const apiUrls = ['http://localhost:5000/api/auth/google'];
 
         let response;
         let lastError;

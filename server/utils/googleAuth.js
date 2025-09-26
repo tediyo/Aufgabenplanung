@@ -20,7 +20,7 @@ const exchangeCodeForToken = async (code) => {
       grant_type: 'authorization_code',
       redirect_uri: process.env.NODE_ENV === 'production' 
         ? 'https://aufgabenplanung.vercel.app/auth/google/callback'
-        : 'https://aufgabenplanung.vercel.app/auth/google/callback',
+        : 'http://localhost:3000/auth/google/callback',
     }),
   });
 
