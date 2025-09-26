@@ -14,11 +14,21 @@ const createTransporter = () => {
     }
   };
 
+  // Debug email configuration
+  console.log('📧 Email Configuration Debug:');
+  console.log('  EMAIL_HOST:', process.env.EMAIL_HOST || 'smtp.gmail.com');
+  console.log('  EMAIL_PORT:', process.env.EMAIL_PORT || 587);
+  console.log('  EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
+  console.log('  EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
+  console.log('  NODE_ENV:', process.env.NODE_ENV);
+
   // Only create transporter if email credentials are provided
   if (emailConfig.auth.user && emailConfig.auth.pass) {
+    console.log('📧 Creating email transporter...');
     return nodemailer.createTransport(emailConfig);
   }
   
+  console.log('❌ Email credentials not provided - email service disabled');
   return null;
 };
 
@@ -77,10 +87,20 @@ const sendEmail = async (to, subject, templateName, data = {}) => {
     };
   } catch (error) {
     console.error('❌ Error sending email:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    });
     return { 
       success: false, 
       error: error.message,
-      reason: 'Email sending failed'
+      reason: 'Email sending failed',
+      details: {
+        code: error.code,
+        command: error.command
+      }
     };
   }
 };

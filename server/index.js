@@ -141,10 +141,48 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
+// Simple email test endpoint
+app.get('/api/simple-email-test', async (req, res) => {
+  try {
+    const nodemailer = require('nodemailer');
+    
+    // Test basic email configuration
+    const transporter = nodemailer.createTransporter({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: process.env.EMAIL_PORT || 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+    
+    const result = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: 'Test Email from Production',
+      text: 'This is a test email from your production server.'
+    });
+    
+    res.json({
+      success: true,
+      message: 'Email sent successfully',
+      messageId: result.messageId,
+      emailConfigured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS)
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      emailConfigured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS)
+    });
+  }
+});
+
 // Email test endpoint
 app.get('/api/test-email', async (req, res) => {
   try {
-    const { sendTaskCreationNotification } = require('./utils/emailService');
+    const { sendTaskCreationEmail } = require('./utils/sendEmail');
     
     // Create a test task and user
     const testTask = {
@@ -161,23 +199,38 @@ app.get('/api/test-email', async (req, res) => {
     const testUser = {
       _id: 'test-user-id',
       name: 'Test User',
-      email: process.env.EMAIL_USER // Send to your own email for testing
+      email: process.env.EMAIL_USER || 'test@example.com' // Send to your own email for testing
     };
     
     console.log(`📧 Testing email notification to: ${testUser.email}`);
-    const result = await sendTaskCreationNotification(testTask, testUser);
+    const result = await sendTaskCreationEmail(testUser, testTask);
     
     res.json({
       message: 'Email test completed',
       emailConfigured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
       sentTo: testUser.email,
-      result: result
+      result: result,
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        EMAIL_HOST: process.env.EMAIL_HOST,
+        EMAIL_PORT: process.env.EMAIL_PORT,
+        EMAIL_USER_SET: !!process.env.EMAIL_USER,
+        EMAIL_PASS_SET: !!process.env.EMAIL_PASS
+      }
     });
   } catch (error) {
+    console.error('Email test error:', error);
     res.status(500).json({
       message: 'Email test failed',
       error: error.message,
-      emailConfigured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS)
+      emailConfigured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        EMAIL_HOST: process.env.EMAIL_HOST,
+        EMAIL_PORT: process.env.EMAIL_PORT,
+        EMAIL_USER_SET: !!process.env.EMAIL_USER,
+        EMAIL_PASS_SET: !!process.env.EMAIL_PASS
+      }
     });
   }
 });
