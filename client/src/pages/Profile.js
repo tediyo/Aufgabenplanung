@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, Settings, Bell, BellOff } from 'lucide-react';
+import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, Bell, BellOff } from 'lucide-react';
 import { authAPI } from '../utils/api';
 import TinySuccessModal from '../components/TinySuccessModal';
 
