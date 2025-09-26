@@ -513,12 +513,12 @@ const Profile = () => {
              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                {/* Header */}
                <div className="flex items-center gap-3 p-4 sm:p-6 border-b border-gray-200">
-                 <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                 {/* <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
                    <Settings className="w-6 h-6 text-purple-600" />
-                 </div>
-                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                 </div> */}
+                 {/* <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                    Notification Settings
-                 </h2>
+                 </h2> */}
                </div>
 
                {/* Email Notifications Toggle */}
@@ -534,7 +534,7 @@ const Profile = () => {
                          )}
                        </div>
                        <div>
-                         <h3 className="font-medium text-gray-900">Email Notifications</h3>
+                       <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Email Notifications</h2>
                          <p className="text-sm text-gray-600">
                            Receive email notifications for task updates, reminders, and summaries
                          </p>
@@ -544,22 +544,25 @@ const Profile = () => {
                        onClick={handleEmailNotificationToggle}
                        disabled={savingPreferences}
                        className={`
-                         relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                         ${emailNotifications ? 'bg-blue-600' : 'bg-gray-200'}
-                         ${savingPreferences ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                         relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-in-out shadow-inner
+                         ${emailNotifications 
+                           ? 'bg-gradient-to-r from-green-400 to-blue-500 shadow-green-200' 
+                           : 'bg-gradient-to-r from-gray-300 to-gray-400 shadow-gray-200'
+                         }
+                         ${savingPreferences ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
                        `}
                      >
                        <span
                          className={`
-                           inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                           ${emailNotifications ? 'translate-x-6' : 'translate-x-1'}
+                           inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-all duration-300 ease-in-out
+                           ${emailNotifications ? 'translate-x-6 shadow-green-300' : 'translate-x-1 shadow-gray-300'}
                          `}
                        />
                      </button>
                    </div>
                    
                    {/* Notification Types Info */}
-                   <div className="mt-4 pl-12">
+                   {/* <div className="mt-4 pl-12">
                      <div className="text-sm text-gray-600 space-y-1">
                        <p>When enabled, you'll receive emails for:</p>
                        <ul className="list-disc list-inside ml-4 space-y-1">
@@ -571,7 +574,7 @@ const Profile = () => {
                          <li>Monthly productivity reports (1st of month 9 AM UTC)</li>
                        </ul>
                      </div>
-                   </div>
+                   </div> */}
                  </div>
                </div>
              </div>
