@@ -6,18 +6,24 @@ const fs = require('fs').promises;
 const createTransporter = () => {
   const emailConfig = {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 587,
-    secure: false, // true for 465, false for other ports
+    port: process.env.EMAIL_PORT || 465, // Use 465 for better production compatibility
+    secure: true, // true for 465, false for other ports
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
-    }
+    },
+    tls: {
+      rejectUnauthorized: false // Allow self-signed certificates
+    },
+    connectionTimeout: 60000, // 60 seconds
+    greetingTimeout: 30000, // 30 seconds
+    socketTimeout: 60000 // 60 seconds
   };
 
   // Debug email configuration
   console.log('📧 Email Configuration Debug:');
   console.log('  EMAIL_HOST:', process.env.EMAIL_HOST || 'smtp.gmail.com');
-  console.log('  EMAIL_PORT:', process.env.EMAIL_PORT || 587);
+  console.log('  EMAIL_PORT:', process.env.EMAIL_PORT || 465);
   console.log('  EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
   console.log('  EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
   console.log('  NODE_ENV:', process.env.NODE_ENV);
