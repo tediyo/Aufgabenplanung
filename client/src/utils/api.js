@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use environment variable for API URL, fallback to relative path for development (uses proxy)
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+// Use environment variable for API URL, fallback to production URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://aufgabenplanung.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -18,32 +18,15 @@ api.interceptors.request.use(
     const token = sessionStorage.getItem('authToken');
     const userEmail = sessionStorage.getItem('userEmail');
     
-    console.log('🔍 Auth Debug - Token:', token ? 'Present' : 'Missing');
-    console.log('🔍 Auth Debug - UserEmail:', userEmail ? 'Present' : 'Missing');
-    console.log('🔍 Auth Debug - SessionStorage keys:', Object.keys(sessionStorage));
-    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔑 Added auth token to request');
-    } else {
-      console.log('⚠️ No auth token found in sessionStorage');
+    } else if (userEmail) {
       // Fallback demo auth via email header (server supports this in dev)
-      if (userEmail) {
-        config.headers['X-User-Email'] = userEmail;
-        console.log('📧 Using X-User-Email fallback header:', userEmail);
-      } else {
-        console.log('❌ No authentication method available!');
-      }
+      config.headers['X-User-Email'] = userEmail;
     }
-    
-    console.log('📡 API Request:', config.method?.toUpperCase(), config.url);
-    console.log('📡 Full URL:', config.baseURL + config.url);
-    console.log('📡 Headers:', config.headers);
-    console.log('📡 Request data:', config.data);
     return config;
   },
   (error) => {
-    console.log('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -51,15 +34,11 @@ api.interceptors.request.use(
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => {
-    console.log('📡 API Response:', response.status, response.config.url);
     return response;
   },
   (error) => {
-    console.log('❌ API Error:', error.response?.status, error.config?.url, error.message);
-    
     // Handle 401 Unauthorized errors without immediate redirect
     if (error.response?.status === 401) {
-      console.log('🔒 Unauthorized response received; preserving session and returning error');
       // Do not clear session or redirect automatically to avoid bounce loop
     }
     
@@ -73,6 +52,7 @@ export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   getProfile: () => api.get('/auth/me'),
   updateProfile: (userData) => api.put('/auth/profile', userData),
+  updatePreferences: (preferences) => api.put('/auth/preferences', preferences),
   changePassword: (passwordData) => api.post('/auth/change-password', passwordData),
 };
 
@@ -81,11 +61,9 @@ export const tasksAPI = {
   getTasks: (params) => api.get('/tasks', { params }),
   getTask: (id) => api.get(`/tasks/${id}`),
   createTask: (taskData) => {
-    console.log('📤 Creating task with data:', taskData);
     return api.post('/tasks', taskData);
   },
   updateTask: (id, taskData) => {
-    console.log('📤 Updating task', id, 'with data:', taskData);
     return api.put(`/tasks/${id}`, taskData);
   },
   deleteTask: (id) => api.delete(`/tasks/${id}`),

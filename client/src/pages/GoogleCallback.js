@@ -29,6 +29,7 @@ const GoogleCallback = () => {
         // Send code to server for processing
         console.log('Sending code to server:', code);
         
+
         // Try multiple API endpoints for production
         const apiUrls = process.env.NODE_ENV === 'production' 
           ? [
@@ -37,7 +38,7 @@ const GoogleCallback = () => {
               'https://aufgabenplanung-backend.onrender.com/api/auth/google'
             ]
           : ['https://aufgabenplanung.onrender.com/api/auth/google'];
-        
+
         let response;
         let lastError;
         

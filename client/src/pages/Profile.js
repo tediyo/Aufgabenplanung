@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, Bell, BellOff } from 'lucide-react';
 import { authAPI } from '../utils/api';
 import TinySuccessModal from '../components/TinySuccessModal';
 
@@ -22,6 +22,8 @@ const Profile = () => {
   const [errors, setErrors] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [savingPreferences, setSavingPreferences] = useState(false);
 
   useEffect(() => {
     loadUserProfile();
@@ -66,6 +68,7 @@ const Profile = () => {
           newPassword: '',
           confirmPassword: ''
         });
+        setEmailNotifications(userData.preferences?.emailNotifications !== false);
       } else {
         console.log('❌ Failed to load profile from server');
         // Redirect to login if not authenticated
@@ -183,6 +186,31 @@ const Profile = () => {
     setIsEditing(false);
   };
 
+  const handleEmailNotificationToggle = async () => {
+    try {
+      setSavingPreferences(true);
+      
+      const newEmailNotifications = !emailNotifications;
+      
+      await authAPI.updatePreferences({
+        emailNotifications: newEmailNotifications,
+        reminderTime: user.preferences?.reminderTime || '09:00',
+        timezone: user.preferences?.timezone || 'UTC'
+      });
+      
+      setEmailNotifications(newEmailNotifications);
+      setSuccessMessage(`Email notifications ${newEmailNotifications ? 'enabled' : 'disabled'} successfully`);
+      setShowSuccessModal(true);
+      
+    } catch (error) {
+      console.error('Error updating email preferences:', error);
+      setSuccessMessage('Failed to update email preferences: ' + (error.response?.data?.message || error.message));
+      setShowSuccessModal(true);
+    } finally {
+      setSavingPreferences(false);
+    }
+  };
+
   if (isLoading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -200,8 +228,8 @@ const Profile = () => {
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => window.history.back()}
+        <button
+          onClick={() => window.history.back()}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -363,8 +391,8 @@ const Profile = () => {
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
+        </button>
+      </div>
                       </div>
 
                       {/* New Password */}
@@ -473,16 +501,91 @@ const Profile = () => {
                           Save Changes
                         </>
                       )}
-                    </button>
+        </button>
                   </div>
                 )}
               </form>
             </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Tiny Success Modal */}
+           </div>
+
+           {/* Email Notification Settings */}
+           <div className="lg:col-span-2">
+             <div className="bg-white rounded-xl shadow-sm overflow-hidden" style={{ 
+               background: 'linear-gradient(white, white) padding-box, linear-gradient(45deg, #8b5cf6, #3b82f6, #06b6d4, #ffffff) border-box',
+               border: '3px solid transparent'
+             }}>
+               {/* Header */}
+               <div className="flex items-center gap-3 p-4 sm:p-6 border-b border-gray-200">
+                 {/* <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                   <Settings className="w-6 h-6 text-purple-600" />
+                 </div> */}
+                 {/* <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                   Notification Settings
+                 </h2> */}
+               </div>
+
+               {/* Email Notifications Toggle */}
+               <div className="p-4 sm:p-6">
+                 <div className="border border-gray-200 rounded-lg p-4">
+                   <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                       <div className="p-2 bg-blue-100 rounded-lg">
+                         {emailNotifications ? (
+                           <Bell className="w-5 h-5 text-blue-600" />
+                         ) : (
+                           <BellOff className="w-5 h-5 text-gray-400" />
+                         )}
+                       </div>
+                       <div>
+                       <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Email Notifications</h2>
+                         <p className="text-sm text-gray-600">
+                           Receive email notifications for task updates, reminders, and summaries
+                         </p>
+                       </div>
+                     </div>
+                     <button
+                       onClick={handleEmailNotificationToggle}
+                       disabled={savingPreferences}
+                       className={`
+                         relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-in-out shadow-inner
+                         ${emailNotifications 
+                           ? 'bg-gradient-to-r from-green-400 to-blue-500 shadow-green-200' 
+                           : 'bg-gradient-to-r from-gray-300 to-gray-400 shadow-gray-200'
+                         }
+                         ${savingPreferences ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
+                       `}
+                     >
+                       <span
+                         className={`
+                           inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-all duration-300 ease-in-out
+                           ${emailNotifications ? 'translate-x-6 shadow-green-300' : 'translate-x-1 shadow-gray-300'}
+                         `}
+                       />
+                     </button>
+                   </div>
+                   
+                   {/* Notification Types Info */}
+                   {/* <div className="mt-4 pl-12">
+                     <div className="text-sm text-gray-600 space-y-1">
+                       <p>When enabled, you'll receive emails for:</p>
+                       <ul className="list-disc list-inside ml-4 space-y-1">
+                         <li>Task creation confirmations</li>
+                         <li>Task completion celebrations</li>
+                         <li>Daily task reminders (9 AM UTC)</li>
+                         <li>Overdue task alerts (6 PM UTC)</li>
+                         <li>Weekly productivity summaries (Monday 8 AM UTC)</li>
+                         <li>Monthly productivity reports (1st of month 9 AM UTC)</li>
+                       </ul>
+                     </div>
+                   </div> */}
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+       
+       {/* Tiny Success Modal */}
       <TinySuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
