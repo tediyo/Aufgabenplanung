@@ -146,15 +146,21 @@ app.get('/api/simple-email-test', async (req, res) => {
   try {
     const nodemailer = require('nodemailer');
     
-    // Test basic email configuration
+    // Test basic email configuration with multiple options
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: process.env.EMAIL_PORT || 587,
-      secure: false,
+      port: 465, // Try port 465 instead of 587
+      secure: true, // true for 465, false for other ports
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-      }
+      },
+      tls: {
+        rejectUnauthorized: false // Allow self-signed certificates
+      },
+      connectionTimeout: 60000, // 60 seconds
+      greetingTimeout: 30000, // 30 seconds
+      socketTimeout: 60000 // 60 seconds
     });
     
     const result = await transporter.sendMail({
