@@ -2,24 +2,8 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs').promises;
 
-// Email configuration
-const createTransporter = () => {
-  const emailConfig = {
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 465, // Use 465 for better production compatibility
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    },
-    tls: {
-      rejectUnauthorized: false // Allow self-signed certificates
-    },
-    connectionTimeout: 60000, // 60 seconds
-    greetingTimeout: 30000, // 30 seconds
-    socketTimeout: 60000 // 60 seconds
-  };
-
+// Email configuration with multiple fallback options
+const createTransporter = async () => {
   // Debug email configuration
   console.log('📧 Email Configuration Debug:');
   console.log('  EMAIL_HOST:', process.env.EMAIL_HOST || 'smtp.gmail.com');
@@ -29,12 +13,75 @@ const createTransporter = () => {
   console.log('  NODE_ENV:', process.env.NODE_ENV);
 
   // Only create transporter if email credentials are provided
-  if (emailConfig.auth.user && emailConfig.auth.pass) {
-    console.log('📧 Creating email transporter...');
-    return nodemailer.createTransport(emailConfig);
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('❌ Email credentials not provided - email service disabled');
+    return null;
   }
-  
-  console.log('❌ Email credentials not provided - email service disabled');
+
+  // Multiple SMTP configurations to try
+  const configs = [
+    // Gmail with port 465 (SSL) - most reliable
+    {
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      tls: { rejectUnauthorized: false }
+    },
+    // Gmail with port 587 (TLS)
+    {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      tls: { rejectUnauthorized: false }
+    },
+    // Alternative Gmail configuration
+    {
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      tls: { rejectUnauthorized: false }
+    },
+    // Try with different timeout settings
+    {
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      tls: { rejectUnauthorized: false },
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000
+    }
+  ];
+
+  // Try each configuration
+  for (const config of configs) {
+    try {
+      console.log(`📧 Trying SMTP config: ${config.host || config.service}:${config.port || 'default'}`);
+      const transporter = nodemailer.createTransport(config);
+      
+      // Return transporter without verification (we'll test during actual send)
+      console.log(`✅ SMTP transporter created with: ${config.host || config.service}:${config.port || 'default'}`);
+      return transporter;
+    } catch (error) {
+      console.log(`❌ SMTP config failed: ${config.host || config.service}:${config.port || 'default'} - ${error.message}`);
+    }
+  }
+
+  console.error('❌ All SMTP configurations failed');
   return null;
 };
 
@@ -59,7 +106,7 @@ const loadTemplate = async (templateName, data = {}) => {
 
 // Send email notification
 const sendEmail = async (to, subject, templateName, data = {}) => {
-  const transporter = createTransporter();
+  const transporter = await createTransporter();
   
   if (!transporter) {
     console.log('📧 Email service not configured - saving notification to database only');
