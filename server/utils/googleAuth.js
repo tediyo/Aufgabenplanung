@@ -18,9 +18,7 @@ const exchangeCodeForToken = async (code) => {
       client_secret: GOOGLE_CLIENT_SECRET,
       code: code,
       grant_type: 'authorization_code',
-      redirect_uri: process.env.NODE_ENV === 'production' 
-        ? 'https://aufgabenplanung.vercel.app/auth/google/callback'
-        : 'http://localhost:3000/auth/google/callback',
+      redirect_uri: 'https://aufgabenplanung.vercel.app/auth/google/callback',
     }),
   });
 
