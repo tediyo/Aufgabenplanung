@@ -6,56 +6,10 @@ const GoogleLoginButton = ({ onSuccess, onError, text = "Continue with Google", 
     if (disabled) return;
     
     try {
-      // Open Google OAuth in a popup window
-      const popup = window.open(
-        buildGoogleAuthUrl(),
-        'google-login',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      );
-
-      // Listen for the popup to close or receive message
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          // Check if we have the auth data in localStorage
-          const authData = localStorage.getItem('googleAuthData');
-          if (authData) {
-            try {
-              const parsedData = JSON.parse(authData);
-              onSuccess(parsedData);
-              localStorage.removeItem('googleAuthData');
-            } catch (error) {
-              onError('Failed to parse authentication data');
-            }
-          }
-        }
-      }, 1000);
-
-      // Listen for messages from the popup
-      const messageListener = (event) => {
-        if (event.origin !== window.location.origin) return;
-        
-        if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-          clearInterval(checkClosed);
-          popup.close();
-          onSuccess(event.data.user);
-        } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-          clearInterval(checkClosed);
-          popup.close();
-          onError(event.data.error);
-        }
-      };
-
-      window.addEventListener('message', messageListener);
-
-      // Clean up listener after 5 minutes
-      setTimeout(() => {
-        window.removeEventListener('message', messageListener);
-        clearInterval(checkClosed);
-      }, 300000);
-
+      // Use redirect-based OAuth instead of popup to avoid COOP issues
+      window.location.href = buildGoogleAuthUrl();
     } catch (error) {
-      onError('Failed to open Google login popup');
+      onError('Failed to redirect to Google login');
     }
   };
 

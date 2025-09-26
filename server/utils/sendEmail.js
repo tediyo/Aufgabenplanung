@@ -96,7 +96,7 @@ const sendTaskCreationEmail = async (user, task) => {
     startDate: new Date(task.startDate).toLocaleDateString(),
     endDate: new Date(task.endDate).toLocaleDateString(),
     estimatedHours: task.estimatedHours || 0,
-    appUrl: process.env.FRONTEND_URL || 'https://aufgabenplanung.vercel.app'
+    appUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
   };
 
   return await sendEmail(
@@ -118,7 +118,7 @@ const sendTaskReminderEmail = async (user, task, reminderType = 'general') => {
     startDate: new Date(task.startDate).toLocaleDateString(),
     endDate: new Date(task.endDate).toLocaleDateString(),
     reminderType: reminderType,
-    appUrl: process.env.FRONTEND_URL || 'https://aufgabenplanung.vercel.app'
+    appUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
   };
 
   return await sendEmail(
@@ -136,7 +136,7 @@ const sendTaskCompletionEmail = async (user, task) => {
     taskTitle: task.title,
     taskDescription: task.description || 'No description provided',
     completionDate: new Date().toLocaleDateString(),
-    appUrl: process.env.FRONTEND_URL || 'https://aufgabenplanung.vercel.app'
+    appUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
   };
 
   return await sendEmail(
@@ -155,7 +155,7 @@ const sendTaskOverdueEmail = async (user, task) => {
     taskDescription: task.description || 'No description provided',
     endDate: new Date(task.endDate).toLocaleDateString(),
     daysOverdue: Math.ceil((new Date() - new Date(task.endDate)) / (1000 * 60 * 60 * 24)),
-    appUrl: process.env.FRONTEND_URL || 'https://aufgabenplanung.vercel.app'
+    appUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
   };
 
   return await sendEmail(
@@ -177,7 +177,7 @@ const sendWeeklySummaryEmail = async (user, summaryData) => {
     pendingTasks: summaryData.pendingTasks,
     overdueTasks: summaryData.overdueTasks,
     completionRate: summaryData.completionRate,
-    appUrl: process.env.FRONTEND_URL || 'https://aufgabenplanung.vercel.app'
+    appUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
   };
 
   return await sendEmail(
@@ -203,7 +203,7 @@ const sendMonthlySummaryEmail = async (user, summaryData) => {
     avgTasksPerDay: summaryData.avgTasksPerDay,
     longestStreak: summaryData.longestStreak,
     categoriesUsed: summaryData.categoriesUsed,
-    appUrl: process.env.FRONTEND_URL || 'https://aufgabenplanung.vercel.app'
+    appUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
   };
 
   return await sendEmail(

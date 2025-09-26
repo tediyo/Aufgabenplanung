@@ -52,7 +52,6 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, type: 'info', title: '', message: '' });
 
   const handleLogin = async (e) => {
@@ -62,7 +61,7 @@ const Login = () => {
       try {
         
         // Call the server API for login
-        const response = await fetch('https://aufgabenplanung.onrender.com/api/auth/login', {
+        const response = await fetch('http://localhost:5000/api/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -97,23 +96,6 @@ const Login = () => {
     }
   };
 
-  const handleGoogleSuccess = (user) => {
-    setGoogleLoading(false);
-    
-    // No localStorage - user data will be fetched from server when needed
-    navigate('/dashboard');
-  };
-
-  const handleGoogleError = (error) => {
-    setGoogleLoading(false);
-    console.error('Google login error:', error);
-    setModal({
-      isOpen: true,
-      type: 'error',
-      title: 'Google Login Failed',
-      message: error
-    });
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
@@ -129,12 +111,10 @@ const Login = () => {
         {/* Google Login Button */}
         <div className="mb-6">
           <GoogleLoginButton
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            text={googleLoading ? "Signing in with Google..." : "Continue with Google"}
-            disabled={googleLoading}
+            text="Continue with Google"
+            disabled={false}
           />
-              </div>
+        </div>
               
         {/* Divider */}
         <div className="relative mb-6">
@@ -220,7 +200,6 @@ const RegisterPage = () => {
     confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, type: 'info', title: '', message: '' });
 
   const handleRegister = async (e) => {
@@ -242,7 +221,7 @@ const RegisterPage = () => {
 
       console.log('🔍 Testing server connectivity...');
 
-      const testResponse = await fetch('https://aufgabenplanung.onrender.com/api/auth/register', {
+      const testResponse = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -302,23 +281,6 @@ const RegisterPage = () => {
     }
   };
 
-  const handleGoogleSuccess = (user) => {
-    setGoogleLoading(false);
-    
-    // No localStorage - user data will be fetched from server when needed
-    navigate('/dashboard');
-  };
-
-  const handleGoogleError = (error) => {
-    setGoogleLoading(false);
-    console.error('Google login error:', error);
-    setModal({
-      isOpen: true,
-      type: 'error',
-      title: 'Google Login Failed',
-      message: error
-    });
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
@@ -334,10 +296,8 @@ const RegisterPage = () => {
         {/* Google Login Button */}
         <div className="mb-6">
           <GoogleLoginButton
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            text={googleLoading ? "Signing up with Google..." : "Sign up with Google"}
-            disabled={googleLoading}
+            text="Sign up with Google"
+            disabled={false}
           />
         </div>
 
