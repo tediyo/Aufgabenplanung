@@ -67,11 +67,11 @@ const MobileDrawer = ({
 
       {/* Drawer */}
       <div className={`
-        lg:hidden fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-gray-800 text-white z-50 transform transition-transform duration-300 ease-in-out
+        lg:hidden fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-gray-800 text-white z-50 transform transition-transform duration-300 ease-in-out flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Logo size="small" />
             <div>
@@ -88,7 +88,7 @@ const MobileDrawer = ({
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-gray-700 flex-shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -102,7 +102,7 @@ const MobileDrawer = ({
         </div>
 
         {/* Filter Buttons */}
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-gray-700 flex-shrink-0">
           <div className="flex flex-wrap gap-2">
             {['all', 'todo', 'in-progress', 'done'].map(status => (
               <button
@@ -123,7 +123,7 @@ const MobileDrawer = ({
         </div>
 
         {/* Task List */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 min-h-0">
           <h3 className="text-sm font-medium text-gray-300 mb-3">
             Tasks ({filteredTasks.length})
           </h3>
@@ -196,7 +196,7 @@ const MobileDrawer = ({
         </div>
 
         {/* Profile, Future Tasks and Logout Buttons */}
-        <div className="p-4 border-t border-gray-700 space-y-2">
+        <div className="p-4 border-t border-gray-700 space-y-2 flex-shrink-0">
           <button
             onClick={() => {
               onClose();
