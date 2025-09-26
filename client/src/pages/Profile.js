@@ -510,7 +510,10 @@ const Profile = () => {
 
            {/* Email Notification Settings */}
            <div className="lg:col-span-2">
-             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+             <div className="bg-white rounded-xl shadow-sm overflow-hidden" style={{ 
+               background: 'linear-gradient(white, white) padding-box, linear-gradient(45deg, #8b5cf6, #3b82f6, #06b6d4, #ffffff) border-box',
+               border: '3px solid transparent'
+             }}>
                {/* Header */}
                <div className="flex items-center gap-3 p-4 sm:p-6 border-b border-gray-200">
                  {/* <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
