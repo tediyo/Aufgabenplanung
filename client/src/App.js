@@ -7,6 +7,7 @@ import GoogleLoginButton from './components/GoogleLoginButton';
 import GoogleCallback from './pages/GoogleCallback';
 import Profile from './pages/Profile';
 import MiniModal from './components/MiniModal';
+import Footer from './components/Footer';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -98,15 +99,16 @@ const Login = () => {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Logo size="xl" />
-                </div>
-          <h1 className="text-2xl font-bold text-gray-900">Task Scheduler</h1>
-          <p className="text-gray-600 mt-2">Complete Task Management Solution</p>
-        </div>
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <Logo size="xl" />
+                  </div>
+            <h1 className="text-2xl font-bold text-gray-900">Task Scheduler</h1>
+            <p className="text-gray-600 mt-2">Complete Task Management Solution</p>
+          </div>
 
         {/* Google Login Button */}
         <div className="mb-6">
@@ -164,9 +166,9 @@ const Login = () => {
           </button>
         </form>
         
-        <p className="text-center text-sm text-gray-500 mt-6">
+        {/* <p className="text-center text-sm text-gray-500 mt-6">
           Use any email and password to test the application
-        </p>
+        </p> */}
         
         <div className="text-center mt-4">
           <button
@@ -176,7 +178,10 @@ const Login = () => {
             Don't have an account? Create one here
           </button>
         </div>
+        </div>
       </div>
+      
+      <Footer />
       
       {/* Mini Modal */}
       <MiniModal
@@ -283,15 +288,16 @@ const RegisterPage = () => {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Logo size="xl" />
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-500 via-orange-400 to-yellow-400 p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <Logo size="xl" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
+            <p className="text-gray-600 mt-2">Join Task Scheduler today</p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-600 mt-2">Join Task Scheduler today</p>
-        </div>
         
         {/* Google Login Button */}
         <div className="mb-6">
@@ -395,7 +401,10 @@ const RegisterPage = () => {
             ← Back to Home
           </button>
         </div>
+        </div>
       </div>
+      
+      <Footer />
       
       {/* Mini Modal */}
       <MiniModal
@@ -430,17 +439,20 @@ function App() {
   return (
     <ErrorBoundary>
     <Router>
-      <div className="App">
-        <Routes>
-            <Route path="/" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<RegisterPage />} />
-            <Route path="/dashboard" element={<ProtectedRoute><ResponsiveDashboard /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/auth/google/callback" element={<GoogleCallback />} />
-            <Route path="*" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
-        </Routes>
-          <NotificationModal />
+      <div className="App min-h-screen flex flex-col">
+        <div className="flex-1">
+          <Routes>
+              <Route path="/" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<RegisterPage />} />
+              <Route path="/dashboard" element={<ProtectedRoute><ResponsiveDashboard /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              <Route path="*" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
+          </Routes>
+        </div>
+        <Footer />
+        <NotificationModal />
       </div>
     </Router>
     </ErrorBoundary>
