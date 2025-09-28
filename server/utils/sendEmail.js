@@ -2,9 +2,6 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs').promises;
 
-// Check if we should use SendGrid instead of Gmail SMTP
-const useSendGrid = process.env.SENDGRID_API_KEY || process.env.EMAIL_SERVICE === 'sendgrid';
-
 // Email configuration with multiple fallback options
 const createTransporter = async () => {
   // Debug email configuration
@@ -13,35 +10,9 @@ const createTransporter = async () => {
   console.log('  EMAIL_PORT:', process.env.EMAIL_PORT || 465);
   console.log('  EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
   console.log('  EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
-  console.log('  SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? 'SET' : 'NOT SET');
-  console.log('  EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'gmail');
   console.log('  NODE_ENV:', process.env.NODE_ENV);
 
-  // Check if email is disabled in production due to SMTP issues
-  if (process.env.NODE_ENV === 'production' && process.env.DISABLE_EMAIL === 'true') {
-    console.log('📧 Email sending disabled in production - using database notifications only');
-    return null;
-  }
-
-  // Try SendGrid first if configured
-  if (useSendGrid && process.env.SENDGRID_API_KEY) {
-    console.log('📧 Using SendGrid email service');
-    try {
-      const transporter = nodemailer.createTransporter({
-        service: 'SendGrid',
-        auth: {
-          user: 'apikey',
-          pass: process.env.SENDGRID_API_KEY
-        }
-      });
-      console.log('✅ SendGrid transporter created successfully');
-      return transporter;
-    } catch (error) {
-      console.log('❌ SendGrid configuration failed:', error.message);
-    }
-  }
-
-  // Only create Gmail transporter if email credentials are provided
+  // Only create transporter if email credentials are provided
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.log('❌ Email credentials not provided - email service disabled');
     return null;
@@ -49,7 +20,7 @@ const createTransporter = async () => {
 
   // Multiple SMTP configurations to try (optimized for Render)
   const configs = [
-    // Gmail with port 587 (TLS) - better for cloud hosting
+    // Gmail with port 587 (TLS) - most compatible with cloud hosting
     {
       host: 'smtp.gmail.com',
       port: 587,
@@ -60,17 +31,17 @@ const createTransporter = async () => {
       },
       tls: { 
         rejectUnauthorized: false,
-        ciphers: 'SSLv3'
+        ciphers: 'TLSv1.2'
       },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-      pool: true,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 15000,
+      pool: false,
       maxConnections: 1,
-      maxMessages: 3,
-      rateLimit: 10
+      maxMessages: 1,
+      rateLimit: 1
     },
-    // Gmail with port 465 (SSL) with extended timeouts
+    // Gmail with port 465 (SSL) - alternative
     {
       host: 'smtp.gmail.com',
       port: 465,
@@ -81,17 +52,17 @@ const createTransporter = async () => {
       },
       tls: { 
         rejectUnauthorized: false,
-        ciphers: 'SSLv3'
+        ciphers: 'TLSv1.2'
       },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-      pool: true,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 15000,
+      pool: false,
       maxConnections: 1,
-      maxMessages: 3,
-      rateLimit: 10
+      maxMessages: 1,
+      rateLimit: 1
     },
-    // Alternative Gmail configuration with timeouts
+    // Gmail service configuration
     {
       service: 'gmail',
       auth: {
@@ -100,17 +71,17 @@ const createTransporter = async () => {
       },
       tls: { 
         rejectUnauthorized: false,
-        ciphers: 'SSLv3'
+        ciphers: 'TLSv1.2'
       },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-      pool: true,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 15000,
+      pool: false,
       maxConnections: 1,
-      maxMessages: 3,
-      rateLimit: 10
+      maxMessages: 1,
+      rateLimit: 1
     },
-    // Fallback with minimal configuration
+    // Minimal configuration for Render
     {
       host: 'smtp.gmail.com',
       port: 587,
@@ -119,9 +90,10 @@ const createTransporter = async () => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      connectionTimeout: 60000,
-      greetingTimeout: 60000,
-      socketTimeout: 60000
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+      pool: false
     }
   ];
 
