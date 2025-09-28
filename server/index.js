@@ -31,10 +31,10 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      'https://aufgabenplanung.vercel.app',
-      'https://aufgabenplanung-git-master-tewodros-birhanus-projects.vercel.app',
       'http://localhost:3000',
       'http://localhost:3001',
+      'https://aufgabenplanung.vercel.app',
+      'https://aufgabenplanung-git-master-tewodros-birhanus-projects.vercel.app',
       process.env.CORS_ORIGIN,
       process.env.FRONTEND_URL
     ].filter(Boolean);
@@ -375,7 +375,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS enabled for development`);
-  console.log(`Google OAuth endpoint: https://aufgabenplanung.onrender.com/api/auth/google`);
+  console.log(`Google OAuth endpoint: http://localhost:5000/api/auth/google`);
 });
 
 // Start cron jobs for email notifications
