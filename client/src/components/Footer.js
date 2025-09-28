@@ -14,7 +14,7 @@ const Footer = () => {
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                 <span className="text-blue-600 font-bold text-lg">T</span>
               </div>
-              <h3 className="text-xl font-bold">Task Scheduler</h3>
+              <h3 className="text-xl font-bold">Personal project Management Tool</h3>
             </div>
             <p className="text-blue-100 text-sm leading-relaxed">
               Complete task management solution designed to help you stay organized and productive.
