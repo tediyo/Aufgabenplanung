@@ -77,6 +77,7 @@ export const TaskProvider = ({ children }) => {
         ...params,
         sortBy: state.sortBy,
         sortOrder: state.sortOrder,
+        limit: 1000, // Request all tasks
       });
 
       dispatch({ type: 'SET_TASKS', payload: response.data.tasks });
