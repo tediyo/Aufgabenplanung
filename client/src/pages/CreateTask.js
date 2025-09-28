@@ -187,6 +187,8 @@ const CreateTask = () => {
     }
 
     setLoading(true);
+    toast.loading('Creating task...', { id: 'create-task' });
+    
     try {
       // Convert dates to ISO8601 format for server validation
       const taskData = {
@@ -197,11 +199,16 @@ const CreateTask = () => {
       
       console.log('Sending create data:', taskData);
       const result = await createTask(taskData);
+      
       if (result.success) {
+        toast.success('Task created successfully!', { id: 'create-task' });
         navigate('/tasks');
+      } else {
+        toast.error(result.message || 'Failed to create task', { id: 'create-task' });
       }
     } catch (error) {
       console.error('Error creating task:', error);
+      toast.error('Failed to create task. Please try again.', { id: 'create-task' });
     } finally {
       setLoading(false);
     }

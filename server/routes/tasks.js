@@ -73,13 +73,12 @@ router.get('/', auth, [
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Execute query
+    // Execute query (optimized - removed expensive populate operations)
     const tasks = await Task.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('parentTask', 'title')
-      .populate('subtasks', 'title status progress');
+      .select('-timeTracking -__v'); // Exclude heavy fields
 
     const total = await Task.countDocuments(filter);
 
@@ -210,23 +209,17 @@ router.post('/', auth, [
 
     // Send immediate task creation notification (non-blocking)
     console.log('📧 Sending task creation notification...');
-    try {
-      await sendImmediateTaskCreationNotification(task, req.user);
-      console.log('✅ Task creation notification sent successfully');
-    } catch (notificationError) {
-      console.error('❌ Failed to send task creation notification:', notificationError);
-      // Don't throw here - notification failure shouldn't prevent task creation
-    }
+    // Don't await - let it run in background
+    sendImmediateTaskCreationNotification(task, req.user)
+      .then(() => console.log('✅ Task creation notification sent successfully'))
+      .catch(error => console.error('❌ Failed to send task creation notification:', error));
 
     // Create scheduled notifications for the task (non-blocking)
     console.log('📅 Creating scheduled notifications...');
-    try {
-      await createTaskNotifications(task, req.user);
-      console.log('✅ Scheduled notifications created successfully');
-    } catch (notificationError) {
-      console.error('❌ Failed to create task notifications:', notificationError);
-      // Don't throw here - notification failure shouldn't prevent task creation
-    }
+    // Don't await - let it run in background
+    createTaskNotifications(task, req.user)
+      .then(() => console.log('✅ Scheduled notifications created successfully'))
+      .catch(error => console.error('❌ Failed to create task notifications:', error));
 
     // If this is a subtask, add it to parent task
     if (parentTask) {
