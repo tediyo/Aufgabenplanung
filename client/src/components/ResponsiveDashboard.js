@@ -8,6 +8,7 @@ import FutureTasks from './FutureTasks';
 import LazyLoadWrapper from './LazyLoadWrapper';
 import { useMobileOptimization, useDebounce } from '../hooks/useMobileOptimization';
 import { tasksAPI } from '../utils/api';
+import toast from 'react-hot-toast';
 
 const ResponsiveDashboard = () => {
   const { touchTargetSize } = useMobileOptimization();
@@ -74,8 +75,8 @@ const ResponsiveDashboard = () => {
     } catch (error) {
       console.error('Error creating task:', error);
       console.error('Failed to create task:', error.message);
-      // Show user-friendly error message
-      alert(`Failed to create task: ${error.message}`);
+      // Show user-friendly error message with toast
+      toast.error(`Failed to create task: ${error.message || 'Network Error'}`);
     }
   };
 
