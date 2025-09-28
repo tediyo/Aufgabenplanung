@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
       // Test server connectivity first
       console.log('🔍 Testing server connectivity...');
       try {
-        const testResponse = await fetch('https://aufgabenplanung.onrender.com/api/auth/register', {
+        const testResponse = await fetch('http://localhost:5000/api/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
