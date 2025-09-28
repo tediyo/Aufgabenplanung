@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Menu, Search, LogOut, Trash2, User, Clock } from 'lucide-react';
 import Logo from './Logo';
+import SidebarFooter from './SidebarFooter';
 
 const MobileDrawer = ({ 
   isOpen, 
@@ -225,6 +226,9 @@ const MobileDrawer = ({
             Logout
           </button>
         </div>
+
+        {/* Footer */}
+        <SidebarFooter />
       </div>
     </>
   );
