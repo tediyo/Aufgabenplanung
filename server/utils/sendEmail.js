@@ -18,20 +18,9 @@ const createTransporter = async () => {
     return null;
   }
 
-  // Multiple SMTP configurations to try
+  // Multiple SMTP configurations to try (optimized for Render)
   const configs = [
-    // Gmail with port 465 (SSL) - most reliable
-    {
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      },
-      tls: { rejectUnauthorized: false }
-    },
-    // Gmail with port 587 (TLS)
+    // Gmail with port 587 (TLS) - better for cloud hosting
     {
       host: 'smtp.gmail.com',
       port: 587,
@@ -40,18 +29,19 @@ const createTransporter = async () => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      tls: { rejectUnauthorized: false }
-    },
-    // Alternative Gmail configuration
-    {
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+      tls: { 
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
       },
-      tls: { rejectUnauthorized: false }
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+      pool: true,
+      maxConnections: 1,
+      maxMessages: 3,
+      rateLimit: 10
     },
-    // Try with different timeout settings
+    // Gmail with port 465 (SSL) with extended timeouts
     {
       host: 'smtp.gmail.com',
       port: 465,
@@ -60,10 +50,49 @@ const createTransporter = async () => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      tls: { rejectUnauthorized: false },
-      connectionTimeout: 10000,
-      greetingTimeout: 5000,
-      socketTimeout: 10000
+      tls: { 
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+      pool: true,
+      maxConnections: 1,
+      maxMessages: 3,
+      rateLimit: 10
+    },
+    // Alternative Gmail configuration with timeouts
+    {
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      tls: { 
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+      pool: true,
+      maxConnections: 1,
+      maxMessages: 3,
+      rateLimit: 10
+    },
+    // Fallback with minimal configuration
+    {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      connectionTimeout: 60000,
+      greetingTimeout: 60000,
+      socketTimeout: 60000
     }
   ];
 
@@ -104,8 +133,11 @@ const loadTemplate = async (templateName, data = {}) => {
   }
 };
 
-// Send email notification
-const sendEmail = async (to, subject, templateName, data = {}) => {
+// Send email notification with retry mechanism
+const sendEmail = async (to, subject, templateName, data = {}, retryCount = 0) => {
+  const maxRetries = 3;
+  const retryDelay = 2000; // 2 seconds
+
   const transporter = await createTransporter();
   
   if (!transporter) {
@@ -129,8 +161,13 @@ const sendEmail = async (to, subject, templateName, data = {}) => {
       html: htmlContent
     };
 
-    // Send email
-    const result = await transporter.sendMail(mailOptions);
+    // Send email with timeout
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Email send timeout')), 45000); // 45 second timeout
+    });
+
+    const result = await Promise.race([sendPromise, timeoutPromise]);
     console.log('📧 Email sent successfully:', result.messageId);
     
     return { 
@@ -139,20 +176,29 @@ const sendEmail = async (to, subject, templateName, data = {}) => {
       message: 'Email sent successfully'
     };
   } catch (error) {
-    console.error('❌ Error sending email:', error);
+    console.error(`❌ Error sending email (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
     console.error('❌ Error details:', {
       message: error.message,
       code: error.code,
       command: error.command,
       response: error.response
     });
+
+    // Retry logic for connection timeouts
+    if (retryCount < maxRetries && (error.code === 'ETIMEDOUT' || error.message.includes('timeout'))) {
+      console.log(`🔄 Retrying email send in ${retryDelay}ms... (attempt ${retryCount + 2})`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      return await sendEmail(to, subject, templateName, data, retryCount + 1);
+    }
+
     return { 
       success: false, 
       error: error.message,
-      reason: 'Email sending failed',
+      reason: 'Email sending failed after retries',
       details: {
         code: error.code,
-        command: error.command
+        command: error.command,
+        attempts: retryCount + 1
       }
     };
   }
