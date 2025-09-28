@@ -7,7 +7,6 @@ import GoogleLoginButton from './components/GoogleLoginButton';
 import GoogleCallback from './pages/GoogleCallback';
 import Profile from './pages/Profile';
 import MiniModal from './components/MiniModal';
-import Footer from './components/Footer';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -181,7 +180,6 @@ const Login = () => {
         </div>
       </div>
       
-      <Footer />
       
       {/* Mini Modal */}
       <MiniModal
@@ -404,7 +402,6 @@ const RegisterPage = () => {
         </div>
       </div>
       
-      <Footer />
       
       {/* Mini Modal */}
       <MiniModal
@@ -451,7 +448,6 @@ function App() {
               <Route path="*" element={isLoggedIn ? <ResponsiveDashboard /> : <Login />} />
           </Routes>
         </div>
-        <Footer />
         <NotificationModal />
       </div>
     </Router>

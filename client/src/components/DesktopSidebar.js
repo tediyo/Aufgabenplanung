@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, LogOut, Trash2, User, Clock } from 'lucide-react';
 import Logo from './Logo';
+import SidebarFooter from './SidebarFooter';
 
 const DesktopSidebar = ({ 
   tasks, 
@@ -41,7 +42,7 @@ const DesktopSidebar = ({
   });
 
   return (
-    <div className="hidden lg:block w-80 h-screen bg-gray-800 text-white overflow-y-auto flex-shrink-0 max-h-screen">
+    <div className="hidden lg:flex w-80 h-screen bg-gray-800 text-white flex-col flex-shrink-0">
       {/* Header */}
       <div className="p-6 border-b border-gray-700">
         <div className="flex items-center gap-3 mb-3">
@@ -182,6 +183,9 @@ const DesktopSidebar = ({
           Logout
         </button>
       </div>
+
+      {/* Footer */}
+      <SidebarFooter />
     </div>
   );
 };
