@@ -1,7 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle, X } from 'lucide-react';
 
 const SuccessModal = ({ isOpen, onClose, onCreateAnother, taskTitle, taskDescription }) => {
+  // Auto-close modal after 3 seconds
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
