@@ -2,6 +2,7 @@ const express = require('express');
 const { query, validationResult } = require('express-validator');
 const Notification = require('../models/Notification');
 const { auth } = require('../middleware/auth');
+const { sendEmail } = require('../utils/sendEmail');
 
 const router = express.Router();
 
@@ -153,6 +154,61 @@ router.put('/:id/cancel', auth, async (req, res) => {
   } catch (error) {
     console.error('Cancel notification error:', error);
     res.status(500).json({ message: 'Server error while cancelling notification' });
+  }
+});
+
+// @route   POST /api/notifications/test-email
+// @desc    Test email service configuration
+// @access  Public (for debugging)
+router.post('/test-email', async (req, res) => {
+  try {
+    console.log('📧 Testing email service in production...');
+    
+    // Test email configuration
+    const testData = {
+      userName: 'Test User',
+      taskTitle: 'Email Service Test',
+      taskDescription: 'Testing email service in production environment',
+      appUrl: process.env.FRONTEND_URL || 'https://aufgabenplanung.vercel.app'
+    };
+
+    const result = await sendEmail(
+      'tewodrosberhanu19@gmail.com', // Send to your email for testing
+      'Email Service Test - Production',
+      'task-created',
+      testData
+    );
+
+    console.log('📧 Email test result:', result);
+
+    res.json({
+      success: true,
+      message: 'Email test completed',
+      result: result,
+      environment: {
+        EMAIL_HOST: process.env.EMAIL_HOST || 'Not set',
+        EMAIL_PORT: process.env.EMAIL_PORT || 'Not set',
+        EMAIL_USER: process.env.EMAIL_USER ? 'Set' : 'Not set',
+        EMAIL_PASS: process.env.EMAIL_PASS ? 'Set' : 'Not set',
+        FRONTEND_URL: process.env.FRONTEND_URL || 'Not set',
+        NODE_ENV: process.env.NODE_ENV || 'Not set'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Email test error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Email test failed',
+      error: error.message,
+      environment: {
+        EMAIL_HOST: process.env.EMAIL_HOST || 'Not set',
+        EMAIL_PORT: process.env.EMAIL_PORT || 'Not set',
+        EMAIL_USER: process.env.EMAIL_USER ? 'Set' : 'Not set',
+        EMAIL_PASS: process.env.EMAIL_PASS ? 'Set' : 'Not set',
+        FRONTEND_URL: process.env.FRONTEND_URL || 'Not set',
+        NODE_ENV: process.env.NODE_ENV || 'Not set'
+      }
+    });
   }
 });
 
