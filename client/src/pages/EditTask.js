@@ -11,6 +11,7 @@ import {
 import { useTasks } from '../contexts/TaskContext';
 import { tasksAPI } from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ConfirmationModal from '../components/ConfirmationModal';
 import toast from 'react-hot-toast';
 
 const EditTask = () => {
@@ -20,6 +21,7 @@ const EditTask = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [task, setTask] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -158,16 +160,19 @@ const EditTask = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      try {
-        const result = await deleteTask(id);
-        if (result.success) {
-          navigate('/tasks');
-        }
-      } catch (error) {
-        console.error('Error deleting task:', error);
+  const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const result = await deleteTask(id);
+      if (result.success) {
+        navigate('/tasks');
       }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task');
     }
   };
 
@@ -610,6 +615,18 @@ const EditTask = () => {
           </button>
         </div>
       </form>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Task"
+        message="Are you sure you want to delete this task? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+      />
     </div>
   );
 };
