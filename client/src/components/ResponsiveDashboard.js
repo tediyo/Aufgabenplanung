@@ -83,7 +83,7 @@ const ResponsiveDashboard = () => {
   const loadTasks = useCallback(async () => {
     try {
       debugAuth();
-      const response = await tasksAPI.getTasks();
+      const response = await tasksAPI.getTasks({ limit: 1000 }); // Request all tasks
       setTasks(response.data.tasks || []);
     } catch (error) {
       console.error('Error loading tasks:', error);

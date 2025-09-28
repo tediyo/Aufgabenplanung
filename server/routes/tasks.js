@@ -32,7 +32,7 @@ router.get('/', auth, [
 
     const {
       page = 1,
-      limit = 20,
+      limit = 1000, // Increased default limit to show all tasks
       status,
       category,
       priority,
