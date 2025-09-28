@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Check, Clock, Calendar } from 'lucide-react';
 import { futureTasksAPI } from '../utils/api';
 import TinySuccessModal from './TinySuccessModal';
+import ConfirmationModal from './ConfirmationModal';
 
 const FutureTasks = () => {
   const [futureTasks, setFutureTasks] = useState([]);
@@ -17,6 +18,8 @@ const FutureTasks = () => {
   });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   useEffect(() => {
     loadFutureTasks();
@@ -116,11 +119,16 @@ const FutureTasks = () => {
     setShowAddModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this future task?')) return;
+  const handleDelete = (id) => {
+    setTaskToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!taskToDelete) return;
 
     try {
-      await futureTasksAPI.deleteFutureTask(id);
+      await futureTasksAPI.deleteFutureTask(taskToDelete);
       setSuccessMessage('Future task deleted successfully!');
       setShowSuccessModal(true);
       loadFutureTasks();
@@ -128,6 +136,8 @@ const FutureTasks = () => {
       console.error('Error deleting future task:', error);
       setSuccessMessage('Failed to delete future task');
       setShowSuccessModal(true);
+    } finally {
+      setTaskToDelete(null);
     }
   };
 
@@ -391,6 +401,18 @@ const FutureTasks = () => {
         onClose={() => setShowSuccessModal(false)}
         message={successMessage}
         duration={3000}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Future Task"
+        message="Are you sure you want to delete this future task? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
       />
     </div>
   );
