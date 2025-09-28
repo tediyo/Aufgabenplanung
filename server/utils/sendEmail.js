@@ -2,6 +2,9 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs').promises;
 
+// Check if we should use SendGrid instead of Gmail SMTP
+const useSendGrid = process.env.SENDGRID_API_KEY || process.env.EMAIL_SERVICE === 'sendgrid';
+
 // Email configuration with multiple fallback options
 const createTransporter = async () => {
   // Debug email configuration
@@ -10,9 +13,35 @@ const createTransporter = async () => {
   console.log('  EMAIL_PORT:', process.env.EMAIL_PORT || 465);
   console.log('  EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
   console.log('  EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
+  console.log('  SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? 'SET' : 'NOT SET');
+  console.log('  EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'gmail');
   console.log('  NODE_ENV:', process.env.NODE_ENV);
 
-  // Only create transporter if email credentials are provided
+  // Check if email is disabled in production due to SMTP issues
+  if (process.env.NODE_ENV === 'production' && process.env.DISABLE_EMAIL === 'true') {
+    console.log('📧 Email sending disabled in production - using database notifications only');
+    return null;
+  }
+
+  // Try SendGrid first if configured
+  if (useSendGrid && process.env.SENDGRID_API_KEY) {
+    console.log('📧 Using SendGrid email service');
+    try {
+      const transporter = nodemailer.createTransporter({
+        service: 'SendGrid',
+        auth: {
+          user: 'apikey',
+          pass: process.env.SENDGRID_API_KEY
+        }
+      });
+      console.log('✅ SendGrid transporter created successfully');
+      return transporter;
+    } catch (error) {
+      console.log('❌ SendGrid configuration failed:', error.message);
+    }
+  }
+
+  // Only create Gmail transporter if email credentials are provided
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.log('❌ Email credentials not provided - email service disabled');
     return null;
@@ -191,15 +220,18 @@ const sendEmail = async (to, subject, templateName, data = {}, retryCount = 0) =
       return await sendEmail(to, subject, templateName, data, retryCount + 1);
     }
 
+    // Even if email fails, we consider it a partial success since notification is logged to DB
+    console.log('📧 Email failed but notification saved to database - this is acceptable');
     return { 
       success: false, 
       error: error.message,
-      reason: 'Email sending failed after retries',
+      reason: 'Email sending failed but notification logged to database',
       details: {
         code: error.code,
         command: error.command,
         attempts: retryCount + 1
-      }
+      },
+      fallback: 'Database notification saved'
     };
   }
 };
